@@ -7,7 +7,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
 import InputField from "./InputField";
 import CustomButton from "./CustomButton";
-import DatePicker from "react-native-date-picker";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 import Ragistrationsvg from "../assets/images/icons/registration.svg";
 import Googlesvg from "../assets/images/icons/google.svg";
@@ -16,8 +16,22 @@ import Twittersvg from "../assets/images/icons/twitter.svg";
 import { useState } from "react";
 
 const SignupScreen = ({ navigation }) => {
-  const [date, setDate] = useState(new Date());
-  const [open, setOpen] = useState(false);
+  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+
+  const showDatePicker = () => {
+    setDatePickerVisibility(true);
+  };
+
+  const hideDatePicker = () => {
+    setDatePickerVisibility(false);
+  };
+
+  const [selectedDate, setSelectedDate] = useState( 'Date of Birth');
+
+  const handleConfirm = (date) => {
+    setSelectedDate(date);
+    hideDatePicker();
+  };
   return (
     <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
       <ScrollView
@@ -151,24 +165,22 @@ const SignupScreen = ({ navigation }) => {
             style={{ marginTop: 5, marginRight: 5 }}
           />
 
-          <TouchableOpacity onPress={() => setOpen(true)}>
+          <TouchableOpacity onPress={showDatePicker}>
             <Text style={{ color: "#666", marginLeft: 5, marginTop: 5 }}>
-              Date of Birth
+            {selectedDate instanceof Date
+            ? selectedDate.toDateString()
+            : selectedDate}
             </Text>
           </TouchableOpacity>
         </View>
 
-        <DatePicker
-          modal
-          open={open}
-          date={date}
-          onConfirm={(date) => {
-            setOpen(false);
-            setDate(date);
-          }}
-          onCancel={() => {
-            setOpen(false);
-          }}
+        <DateTimePickerModal
+          isVisible={isDatePickerVisible}
+          mode="date"
+          maximumDate={new Date('2010-01-01')}
+          minimumDate={new Date('1923-01-01')}
+          onConfirm={handleConfirm}
+          onCancel={hideDatePicker}
         />
 
         <CustomButton label={"SignUp"} onPress={() => {}} />
