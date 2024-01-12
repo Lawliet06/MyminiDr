@@ -1,4 +1,10 @@
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import React from "react";
 
 import { ScrollView } from "react-native";
@@ -15,6 +21,9 @@ import Facebooksvg from "../assets/images/icons/facebook.svg";
 import Twittersvg from "../assets/images/icons/twitter.svg";
 import { useState } from "react";
 
+import { FIREBASE_AUTH } from "../Firebaseconfig";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+
 const SignupScreen = ({ navigation }) => {
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
@@ -26,12 +35,76 @@ const SignupScreen = ({ navigation }) => {
     setDatePickerVisibility(false);
   };
 
-  const [selectedDate, setSelectedDate] = useState( 'Date of Birth');
+  const [selectedDate, setSelectedDate] = useState("Date of Birth");
 
   const handleConfirm = (date) => {
     setSelectedDate(date);
     hideDatePicker();
   };
+
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [loading, setLoading] = useState(false);
+
+  const auth = FIREBASE_AUTH;
+
+  const isValidEmail = (email) => {
+    // Basic email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const userData = {
+    fullName,
+    dateOfBirth:
+      selectedDate instanceof Date ? selectedDate.toDateString() : selectedDate,
+  };
+
+  const SignUp = async () => {
+    setLoading(true);
+    try {
+      if (!isValidEmail(email)) {
+        alert("Please enter a valid email address.");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        alert("Password and Confirm Password must match.");
+        return;
+      }
+
+      const response = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      await updateProfile(response.user, userData);
+
+      console.log(response);
+      alert("Check your email!");
+    } catch (error) {
+      console.log(error);
+      switch (error.code) {
+        case "auth/email-already-in-use":
+          alert("Email is already in use. Please use a different email");
+          break;
+        case "auth/weak-password":
+          isTypeAliasDeclaration(
+            "Password is too weak. Please use a stronger password"
+          );
+          break;
+        default:
+          alert("SignUp Failed: " + error.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
       <ScrollView
@@ -108,6 +181,7 @@ const SignupScreen = ({ navigation }) => {
               style={{ marginTop: 5, marginRight: 5 }}
             />
           }
+          onChangeText={(text) => setFullName(text)}
         />
 
         <InputField
@@ -121,6 +195,7 @@ const SignupScreen = ({ navigation }) => {
             />
           }
           keyboardType="email-address"
+          onChangeText={(text) => setEmail(text)}
         />
 
         <InputField
@@ -134,6 +209,7 @@ const SignupScreen = ({ navigation }) => {
             />
           }
           inputType="password"
+          onChangeText={(text) => setPassword(text)}
         />
 
         <InputField
@@ -147,6 +223,7 @@ const SignupScreen = ({ navigation }) => {
             />
           }
           inputType="password"
+          onChangeText={(text) => setConfirmPassword(text)}
         />
 
         <View
@@ -167,9 +244,9 @@ const SignupScreen = ({ navigation }) => {
 
           <TouchableOpacity onPress={showDatePicker}>
             <Text style={{ color: "#666", marginLeft: 5, marginTop: 5 }}>
-            {selectedDate instanceof Date
-            ? selectedDate.toDateString()
-            : selectedDate}
+              {selectedDate instanceof Date
+                ? selectedDate.toDateString()
+                : selectedDate}
             </Text>
           </TouchableOpacity>
         </View>
@@ -177,13 +254,17 @@ const SignupScreen = ({ navigation }) => {
         <DateTimePickerModal
           isVisible={isDatePickerVisible}
           mode="date"
-          maximumDate={new Date('2010-01-01')}
-          minimumDate={new Date('1923-01-01')}
+          maximumDate={new Date("2010-01-01")}
+          minimumDate={new Date("1923-01-01")}
           onConfirm={handleConfirm}
           onCancel={hideDatePicker}
         />
 
-        <CustomButton label={"SignUp"} onPress={() => {}} />
+        {loading ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : (
+          <CustomButton label={"SignUp"} onPress={() => SignUp()} />
+        )}
 
         <View
           style={{

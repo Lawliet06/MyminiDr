@@ -1,12 +1,11 @@
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { GoogleAuthProvider, FacebookAuthProvider, TwitterAuthProvider } from 'firebase/auth';
-
-
-import {getAuth} from 'firebase/auth';
-import {getFirestore} from "firebase/firestore";
-import {getStorage} from "firebase/storage";
-
+import { getFirestore } from "firebase/firestore";
+import {
+  getAuth,
+  initializeAuth,
+  getReactNativePersistence,
+} from "firebase/auth";
+import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCrzla-YYpHjnQgLcsispJmPcPdFp8f72I",
@@ -15,12 +14,14 @@ const firebaseConfig = {
   storageBucket: "my-mini-dr.appspot.com",
   messagingSenderId: "320612794855",
   appId: "1:320612794855:web:41a12febae93e9c2363d42",
-  measurementId: "G-LFFPYPP3CB"
+  measurementId: "G-LFFPYPP3CB",
 };
 
 // Initialize Firebase
-export const FIREBASE_APP = initializeApp(firebaseConfig);
-export const FIREBASE_Auth = getAuth(FIREBASE_APP);
-export const FIREBASE_DB = getFirestore(FIREBASE_APP);
-export const FIREBASE_STORE = getStorage(FIREBASE_APP);
-const analytics = getAnalytics(FIREBASE_APP);
+const app = initializeApp(firebaseConfig);
+const firestore = getFirestore(app);
+const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+});
+
+export { app as FIREBASE_APP, firestore as FIREBASE_DB, auth as FIREBASE_AUTH };

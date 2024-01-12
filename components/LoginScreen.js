@@ -1,5 +1,11 @@
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
-import React from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
+import React, { useState } from "react";
 import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -11,7 +17,52 @@ import Googlesvg from "../assets/images/icons/google.svg";
 import Facebooksvg from "../assets/images/icons/facebook.svg";
 import Twittersvg from "../assets/images/icons/twitter.svg";
 
+import { FIREBASE_AUTH } from "../Firebaseconfig";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+
 const LoginScreen = ({ navigation }) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const auth = FIREBASE_AUTH;
+
+  const isValidEmail = (email) => {
+    // Basic email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const Login = async () => {
+    setLoading(true);
+    try {
+      if (!isValidEmail(email)) {
+        alert("Please enter a valid email address.");
+        return;
+      }
+
+      const response = await signInWithEmailAndPassword(auth, email, password);
+      console.log(response);
+      alert("Login was succesful! Check your email!");
+    } catch (error) {
+      console.log("Firebase Authentication Error:", error);
+
+      if (error.code === "auth/user-not-found") {
+        alert("Invalid email. Please check your email and try again.");
+      } else if (error.code === "auth/wrong-password") {
+        alert("Incorrect password. Please try again.");
+      } else {
+
+        alert("Login Failed. Please check your credentials and try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
       <ScrollView style={{ paddingHorizontal: 25 }}>
@@ -39,6 +90,7 @@ const LoginScreen = ({ navigation }) => {
             />
           }
           keyboardType="email-address"
+          onChangeText={(text) => setEmail(text)}
         />
 
         <InputField
@@ -52,12 +104,16 @@ const LoginScreen = ({ navigation }) => {
             />
           }
           inputType="password"
-          fieldButtonLabel={'Forgot password?'}
+          onChangeText={(text) => setPassword(text)}
+          fieldButtonLabel={"Forgot password?"}
           fieldButtonFunction={() => {}}
         />
 
-
-        <CustomButton label={"Login"} onPress={() => {}} />
+        {loading ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : (
+          <CustomButton label={"Login"} onPress={() => Login()} />
+        )}
 
         <Text style={{ textAlign: "center", color: "#666", marginBottom: 20 }}>
           Or, login with...
