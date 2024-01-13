@@ -18,11 +18,23 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import Ragistrationsvg from "../assets/images/icons/registration.svg";
 import Googlesvg from "../assets/images/icons/google.svg";
 import Facebooksvg from "../assets/images/icons/facebook.svg";
-import Twittersvg from "../assets/images/icons/twitter.svg";
+//import Twittersvg from "../assets/images/icons/twitter.svg";
 import { useState } from "react";
 
 import { FIREBASE_AUTH } from "../Firebaseconfig";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  setDoc,
+  doc,
+  documentId,
+} from "firebase/firestore";
+import { FIREBASE_APP } from "../Firebaseconfig";
+
+const firestore = getFirestore(FIREBASE_APP);
 
 const SignupScreen = ({ navigation }) => {
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
@@ -57,12 +69,6 @@ const SignupScreen = ({ navigation }) => {
     return emailRegex.test(email);
   };
 
-  const userData = {
-    fullName,
-    dateOfBirth:
-      selectedDate instanceof Date ? selectedDate.toDateString() : selectedDate,
-  };
-
   const SignUp = async () => {
     setLoading(true);
     try {
@@ -82,7 +88,16 @@ const SignupScreen = ({ navigation }) => {
         password
       );
 
-      await updateProfile(response.user, userData);
+      const userDocRef = doc(firestore, "users", response.user.uid);
+
+      // Add user data to Firestore
+      await setDoc(userDocRef, {
+        fullName,
+        dateOfBirth:
+          selectedDate instanceof Date
+            ? selectedDate.toDateString()
+            : selectedDate,
+      });
 
       console.log(response);
       alert("Check your email!");
@@ -153,17 +168,6 @@ const SignupScreen = ({ navigation }) => {
             }}
           >
             <Facebooksvg height={24} width={24} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {}}
-            style={{
-              backgroundColor: "#ddd",
-              borderRadius: 10,
-              paddingHorizontal: 30,
-              paddingVertical: 10,
-            }}
-          >
-            <Twittersvg height={24} width={24} />
           </TouchableOpacity>
         </View>
 

@@ -15,13 +15,14 @@ import CustomButton from "./CustomButton";
 import Loginsvg from "../assets/images/icons/login.svg";
 import Googlesvg from "../assets/images/icons/google.svg";
 import Facebooksvg from "../assets/images/icons/facebook.svg";
-import Twittersvg from "../assets/images/icons/twitter.svg";
+//import Twittersvg from "../assets/images/icons/twitter.svg";
 
 import { FIREBASE_AUTH } from "../Firebaseconfig";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
+import Home from "../app/Home";
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -47,6 +48,7 @@ const LoginScreen = ({ navigation }) => {
       const response = await signInWithEmailAndPassword(auth, email, password);
       console.log(response);
       alert("Login was succesful! Check your email!");
+      navigation.navigate("Home");
     } catch (error) {
       console.log("Firebase Authentication Error:", error);
 
@@ -55,11 +57,13 @@ const LoginScreen = ({ navigation }) => {
       } else if (error.code === "auth/wrong-password") {
         alert("Incorrect password. Please try again.");
       } else {
-
         alert("Login Failed. Please check your credentials and try again.");
       }
     } finally {
       setLoading(false);
+    }
+
+    {
     }
   };
 
@@ -141,17 +145,6 @@ const LoginScreen = ({ navigation }) => {
             }}
           >
             <Facebooksvg height={24} width={24} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {}}
-            style={{
-              backgroundColor: "#ddd",
-              borderRadius: 10,
-              paddingHorizontal: 30,
-              paddingVertical: 10,
-            }}
-          >
-            <Twittersvg height={24} width={24} />
           </TouchableOpacity>
         </View>
         <View
