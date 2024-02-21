@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Test",
-    "slug": "Test",
+    "name": "MyminiDr",
+    "slug": "MyminiDr",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -22,7 +22,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.black_culture_apps.MyminiDr"
     },
     "web": {
       "bundler": "metro",
@@ -34,6 +35,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "7c83c34e-0086-4727-a0b7-2215228a136f"
+      }
     }
   }
 }
