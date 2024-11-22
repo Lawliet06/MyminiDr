@@ -8,7 +8,7 @@ import {
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCrzla-YYpHjnQgLcsispJmPcPdFp8f72I",
+  apiKey: "AIzaSyBkplGQtiqUnulk68hL191N6gj1f5F6UkA",
   authDomain: "my-mini-dr.firebaseapp.com",
   projectId: "my-mini-dr",
   storageBucket: "my-mini-dr.appspot.com",

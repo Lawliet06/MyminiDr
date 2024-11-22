@@ -1,7 +1,7 @@
 import NavLogin from "./NavLogin";
 import NavSignUp from "./NavSignUp";
 import Home from "./Home";
-
+import Chat from "./NavChat";
 
 import Welcome from "./Welcome";
 
@@ -24,6 +24,11 @@ const App = () => {
         options={{ headerShown: false, headerTitleAlign: "center" }}
       />
       <Stack.Screen
+        name="ChatScreen"
+        component={Chat}
+        options={{ headerShown: false, headerTitleAlign: "center" }}
+      />
+      <Stack.Screen
         name="NavLogin"
         component={NavLogin}
         options={{ headerShown: false, headerTitleAlign: "center" }}
@@ -34,8 +39,6 @@ const App = () => {
         component={NavSignUp}
         options={{ headerShown: false, headerTitleAlign: "center" }}
       />
-
-
     </Stack.Navigator>
   );
 };

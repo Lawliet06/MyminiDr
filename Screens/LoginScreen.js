@@ -4,8 +4,8 @@ import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
-import InputField from "./InputField";
-import CustomButton from "./CustomButton";
+import InputField from "../components/InputField";
+import CustomButton from "../components/CustomButton";
 
 import Loginsvg from "../assets/images/icons/login.svg";
 

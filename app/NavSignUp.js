@@ -1,6 +1,6 @@
 import React from "react";
 
-import SignUp from "../components/SignUpScreen";
+import SignUp from "../Screens/SignUpScreen";
 
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 

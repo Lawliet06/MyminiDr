@@ -1,8 +1,16 @@
 import React, { useState } from "react";
-import { Text, View, TouchableOpacity, Alert, TextInput } from "react-native";
+import {
+  Text,
+  View,
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+  ScrollView,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Modal from "react-native-modal";
+import Icon from "react-native-vector-icons/FontAwesome"; // For icons
 import { FIREBASE_AUTH } from "../Firebaseconfig";
 import {
   deleteUser,
@@ -12,71 +20,37 @@ import {
 
 const Home = () => {
   const navigation = useNavigation();
+  const [isSidebarVisible, setSidebarVisible] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [isPasswordModalVisible, setPasswordModalVisible] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
 
-  const handleExit = () => {
-    // Navigate to the Welcome screen without signing out
-    navigation.navigate("Welcome");
-  };
+  const handleExit = () => navigation.navigate("Welcome");
 
   const handleLogout = async () => {
-    // Clear login state
     await AsyncStorage.removeItem("userToken");
     navigation.navigate("Welcome");
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
-      "Confirm Deletion",
-      "Are you sure you want to delete your account?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            setPasswordModalVisible(true);
-          },
-        },
-      ]
-    );
+    setPasswordModalVisible(true);
   };
 
   const handlePasswordConfirmation = async () => {
     try {
       setDeletingAccount(true);
-
-      // Get the current user
       const user = FIREBASE_AUTH.currentUser;
-
-      // Create a credential with the user's email and entered password
-      const credential = EmailAuthProvider.credential(
-        user.email,
-        passwordInput
-      );
-
-      // Reauthenticate the user with the credential
+      const credential = EmailAuthProvider.credential(user.email, passwordInput);
       await reauthenticateWithCredential(user, credential);
-
-      // Delete the user's account
       await deleteUser(user);
-
-      // Clear login state
       await AsyncStorage.removeItem("userToken");
-
-      // Navigate to the Welcome screen
       navigation.navigate("Welcome");
     } catch (error) {
-      if (error.code === "auth/invalid-credential") {
-        Alert.alert("Incorrect Password", "Please enter the correct password.");
-      } else {
-        Alert.alert("Error", "Failed to delete account. Please try again.");
-      }
+      const errorMessage =
+        error.code === "auth/invalid-credential"
+          ? "Incorrect Password"
+          : "Failed to delete account. Please try again.";
+      alert(errorMessage);
     } finally {
       setDeletingAccount(false);
       setPasswordModalVisible(false);
@@ -84,44 +58,155 @@ const Home = () => {
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <Text>Wassup Dawg</Text>
-      <TouchableOpacity onPress={handleExit} style={{ marginTop: 20 }}>
-        <Text style={{ color: "green" }}>Exit</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={handleLogout} style={{ marginTop: 20 }}>
-        <Text style={{ color: "blue" }}>Logout</Text>
-      </TouchableOpacity>
+    <View style={styles.container}>
+      {/* Sidebar */}
+      {isSidebarVisible && (
+        <View style={styles.sidebar}>
+          <TouchableOpacity onPress={handleExit} style={styles.sidebarItem}>
+            <Icon name="sign-out" size={18} color="#fff" />
+            <Text style={styles.sidebarText}>Exit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleLogout} style={styles.sidebarItem}>
+            <Icon name="power-off" size={18} color="#fff" />
+            <Text style={styles.sidebarText}>Logout</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleDeleteAccount}
+            style={styles.sidebarItem}
+            disabled={deletingAccount}
+          >
+            <Icon name="trash" size={18} color="#fff" />
+            <Text style={styles.sidebarText}>
+              {deletingAccount ? "Deleting..." : "Delete Account"}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.closeSidebar}
+            onPress={() => setSidebarVisible(false)}
+          >
+            <Icon name="times" size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Hamburger Menu Button */}
       <TouchableOpacity
-        onPress={handleDeleteAccount}
-        style={{ marginTop: 20 }}
-        disabled={deletingAccount}
+        style={styles.hamburgerMenu}
+        onPress={() => setSidebarVisible(true)}
       >
-        <Text style={{ color: "red" }}>
-          {deletingAccount ? "Deleting Account..." : "Delete Account"}
-        </Text>
+        <Text style={styles.hamburgerIcon}>☰</Text>
       </TouchableOpacity>
 
-      {/* Password Re-entry Modal */}
-      <Modal isVisible={isPasswordModalVisible}>
-        <View
-          style={{ backgroundColor: "white", padding: 20, borderRadius: 10 }}
-        >
-          <Text>Re-enter your password to confirm</Text>
+      {/* Main Content */}
+      <ScrollView contentContainerStyle={styles.mainContent}>
+        <Text style={styles.welcomeText}>Welcome, User!</Text>
+        <View style={styles.cardsContainer}>
+          {/* Chat Card */}
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => navigation.navigate("ChatScreen")} // Replace with actual navigation or logic
+          >
+            <Icon name="comment" size={50} color="#4CAF50" />
+            <Text style={styles.cardText}>Chat with Simy</Text>
+          </TouchableOpacity>
+
+          {/* Talk Card */}
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => navigation.navigate("ChatScreen")} // Replace with actual navigation or logic
+          >
+            <Icon name="microphone" size={50} color="#2196F3" />
+            <Text style={styles.cardText}>Talk with Simy</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* History Section */}
+        <Text style={styles.sectionTitle}>History</Text>
+        <ScrollView style={styles.historyContainer}>
+          {[
+            "Color recommendation for Finance app",
+            "5 slogan for travel website",
+            "Fitness app for everyone",
+          ].map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.historyItem}
+              onPress={() => alert(`Clicked on: ${item}`)} // Replace with actual navigation or logic
+            >
+              <Icon name="clock-o" size={18} color="#fff" />
+              <Text style={styles.historyText}>{item}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </ScrollView>
+
+      {/* Password Confirmation Modal */}
+      <Modal isVisible={isPasswordModalVisible} backdropOpacity={0.5}>
+        <View style={styles.modal}>
+          <Text style={styles.modalTitle}>Confirm Password</Text>
           <TextInput
             secureTextEntry
-            placeholder="Password"
+            placeholder="Enter Password"
             value={passwordInput}
-            onChangeText={(text) => setPasswordInput(text)}
-            style={{ borderBottomWidth: 1, marginBottom: 20 }}
+            onChangeText={setPasswordInput}
+            style={styles.input}
           />
           <TouchableOpacity onPress={handlePasswordConfirmation}>
-            <Text style={{ color: "blue" }}>Confirm</Text>
+            <Text style={styles.confirmText}>Confirm</Text>
           </TouchableOpacity>
         </View>
       </Modal>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#121212", position: "relative" },
+  hamburgerMenu: { position: "absolute", top: 20, left: 20, zIndex: 2 },
+  hamburgerIcon: { fontSize: 30, color: "#fff" },
+  sidebar: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "60%",
+    height: "100%",
+    backgroundColor: "#333",
+    padding: 20,
+    zIndex: 10,
+  },
+  sidebarItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  sidebarText: { marginLeft: 10, color: "#fff", fontSize: 16 },
+  closeSidebar: { position: "absolute", top: 20, right: 20 },
+  mainContent: { alignItems: "center", padding: 20, marginTop: 80 },
+  welcomeText: { fontSize: 24, color: "#fff", marginBottom: 20 },
+  cardsContainer: { flexDirection: "row", justifyContent: "space-around", width: "100%" },
+  card: {
+    backgroundColor: "#1e1e1e",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    width: "40%",
+  },
+  cardText: { color: "#fff", marginTop: 10 },
+  sectionTitle: { fontSize: 20, color: "#fff", marginVertical: 20, alignSelf: "flex-start" },
+  historyContainer: { width: "100%" },
+  historyItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 10,
+    padding: 10,
+    backgroundColor: "#1e1e1e",
+    borderRadius: 8,
+  },
+  historyText: { color: "#fff", marginLeft: 10 },
+  modal: { backgroundColor: "#fff", padding: 20, borderRadius: 10 },
+  modalTitle: { fontSize: 18, marginBottom: 10 },
+  input: { borderBottomWidth: 1, marginBottom: 20 },
+  confirmText: { color: "blue", textAlign: "center" },
+});
 
 export default Home;
