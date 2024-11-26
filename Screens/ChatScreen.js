@@ -12,18 +12,20 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import * as GoogleGenerativeAI from "@google/generative-ai";
 import { launchImageLibrary } from "react-native-image-picker";
-
+import RNFetchBlob from 'rn-fetch-blob';  // Import rn-fetch-blob
 
 const ChatScreen = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const API_KEY = "AIzaSyAQzJer7LGPAp8kkG8JOjrsrfY9PjWd7hc"; // Add your Gemini API Key here.
+  const TEXT_API_KEY = "AIzaSyAQzJer7LGPAp8kkG8JOjrsrfY9PjWd7hc"; // API Key for text generation
+  const VISION_API_KEY = "AIzaSyDnUzQV5SMKTh6CQ2zVTNtj0waBd0dXYPQ"; // API Key for Vision API
+  const VISION_API_URL = "https://vision.googleapis.com/v1/images:annotate?key=" + VISION_API_KEY;
 
   useEffect(() => {
     const welcomeMessage = async () => {
-      const genAI = new GoogleGenerativeAI.GoogleGenerativeAI(API_KEY);
+      const genAI = new GoogleGenerativeAI.GoogleGenerativeAI(TEXT_API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-pro" });
       const result = await model.generateContent(
         "Welcome to Health Assistant Chat! I can help with health tips, diagnosis based on symptoms, psychological advice, and suggesting medications."
@@ -50,7 +52,7 @@ const ChatScreen = () => {
     setLoading(true);
 
     try {
-      const genAI = new GoogleGenerativeAI.GoogleGenerativeAI(API_KEY);
+      const genAI = new GoogleGenerativeAI.GoogleGenerativeAI(TEXT_API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-pro" });
       const healthContext =
         "You are a health assistant chatbot. Provide health tips, diagnosis based on symptoms, psychological advice, and suggest medications where relevant. Only answer health-related queries.";
@@ -69,44 +71,85 @@ const ChatScreen = () => {
   };
 
   const handleImageUpload = async () => {
-  try {
-    const result = await launchImageLibrary({
-      mediaType: "photo", // Only allow photo selection
-      quality: 1,         // High-quality images
-    });
-
-    if (result.didCancel) {
-      console.log("User cancelled image picker");
-      return;
-    }
-
-    if (result.errorCode) {
-      console.error("Image Picker Error: ", result.errorMessage);
-      return;
-    }
-
-    if (result.assets && result.assets.length > 0) {
-      const imageUri = result.assets[0].uri; // Extract image URI
-      console.log("Selected Image URI: ", imageUri);
-
+    try {
+      const result = await launchImageLibrary({
+        mediaType: "photo", // Allow photo selection
+        quality: 1, // High-quality images
+      });
+  
+      if (result.didCancel) {
+        console.log("User cancelled image picker");
+        return;
+      }
+  
+      if (result.errorCode) {
+        console.error("Image Picker Error: ", result.errorMessage);
+        return;
+      }
+  
+      if (result.assets && result.assets.length > 0) {
+        const imageUri = result.assets[0].uri; // Extract image URI
+        console.log("Selected Image URI: ", imageUri);
+  
+        setMessages((prev) => [
+          ...prev,
+          { text: "Image uploaded successfully. Analyzing...", type: "bot" },
+        ]);
+  
+        // Use rn-fetch-blob to read the image and convert it to base64
+        const base64Image = await RNFetchBlob.fs.readFile(imageUri, 'base64');
+        console.log("Base64 Encoded Image: ", base64Image); // Log the base64 string
+  
+        // Send the image to Google Vision API
+        const visionResponse = await fetch(VISION_API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            requests: [
+              {
+                image: {
+                  content: base64Image, // Sending base64 encoded image
+                },
+                features: [
+                  {
+                    type: "LABEL_DETECTION", // Feature to detect labels
+                    maxResults: 5, // Max number of results you want
+                  },
+                ],
+              },
+            ],
+          }),
+        });
+  
+        // Log the response from the Vision API
+        const visionData = await visionResponse.json();
+        console.log("Google Vision API Response: ", visionData);
+  
+        if (visionData.error) {
+          console.error("Vision API Error: ", visionData.error);
+          throw new Error("Error analyzing image with Vision API");
+        }
+  
+        const labels = visionData.responses[0].labelAnnotations || [];
+        const description = labels
+          .map((label) => label.description)
+          .join(", ");
+        setMessages((prev) => [
+          ...prev,
+          { text: `Image analysis result: ${description}`, type: "bot" },
+        ]);
+      }
+    } catch (error) {
+      console.error("Error launching image library or analyzing image: ", error);
       setMessages((prev) => [
         ...prev,
-        { text: "Image uploaded successfully. Analyzing...", type: "bot" },
-      ]);
-
-      // Placeholder for image analysis
-      setMessages((prev) => [
-        ...prev,
-        {
-          text: "Image analysis feature is in development. Stay tuned!",
-          type: "bot",
-        },
+        { text: "Error: Unable to analyze image. Please try again.", type: "bot" },
       ]);
     }
-  } catch (error) {
-    console.error("Error launching image library: ", error);
-  }
-};
+  };
+  
 
   const renderMessage = ({ item }) => (
     <View
@@ -123,7 +166,6 @@ const ChatScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Image
@@ -137,7 +179,6 @@ const ChatScreen = () => {
         </View>
       </View>
 
-      {/* Messages List */}
       <FlatList
         data={messages}
         renderItem={renderMessage}
@@ -145,7 +186,6 @@ const ChatScreen = () => {
         contentContainerStyle={styles.messagesList}
       />
 
-      {/* Input Section */}
       <View style={styles.inputSection}>
         <TouchableOpacity style={styles.iconButton} onPress={handleImageUpload}>
           <FontAwesome name="picture-o" size={24} color="#fff" />
@@ -190,7 +230,7 @@ const styles = StyleSheet.create({
   messageText: { color: "#fff", fontSize: 14 },
   userMessage: {
     alignSelf: "flex-end",
-    
+
   },
   botMessage: {
     alignSelf: "flex-start",
@@ -209,17 +249,11 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
     borderRadius: 20,
-    paddingHorizontal: 15,
-    backgroundColor: "#333",
+    backgroundColor: "#444",
     color: "#fff",
-    fontSize: 14,
+    paddingLeft: 15,
   },
-  sendButton: {
-    backgroundColor: "#4CAF50",
-    borderRadius: 20,
-    padding: 10,
-    marginLeft: 10,
-  },
+  sendButton: { marginLeft: 10 },
 });
 
 export default ChatScreen;
