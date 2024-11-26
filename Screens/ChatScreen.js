@@ -11,7 +11,8 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import * as GoogleGenerativeAI from "@google/generative-ai";
-import { launchImageLibrary } from "react-native-image-picker"; // Importing the image picker
+import { launchImageLibrary } from "react-native-image-picker";
+
 
 const ChatScreen = () => {
   const [messages, setMessages] = useState([]);
@@ -67,40 +68,45 @@ const ChatScreen = () => {
     }
   };
 
-  const handleImageUpload = () => {
-    launchImageLibrary(
-      {
-        mediaType: "photo", // Limit to images
-        quality: 1,
-        includeBase64: false, // Base64 encoding can be enabled if needed
-      },
-      (response) => {
-        if (response.didCancel) {
-          console.log("User cancelled image picker");
-          return;
-        }
-        if (response.errorCode) {
-          console.error("Image Picker Error: ", response.errorMessage);
-          return;
-        }
+  const handleImageUpload = async () => {
+  try {
+    const result = await launchImageLibrary({
+      mediaType: "photo", // Only allow photo selection
+      quality: 1,         // High-quality images
+    });
 
-        const imageUri = response.assets[0].uri; // Get the image URI
-        setMessages((prev) => [
-          ...prev,
-          { text: "Image uploaded successfully. Analyzing...", type: "bot" },
-        ]);
+    if (result.didCancel) {
+      console.log("User cancelled image picker");
+      return;
+    }
 
-        // Placeholder for image analysis logic
-        setMessages((prev) => [
-          ...prev,
-          {
-            text: "Image analysis feature is in development. Stay tuned!",
-            type: "bot",
-          },
-        ]);
-      }
-    );
-  };
+    if (result.errorCode) {
+      console.error("Image Picker Error: ", result.errorMessage);
+      return;
+    }
+
+    if (result.assets && result.assets.length > 0) {
+      const imageUri = result.assets[0].uri; // Extract image URI
+      console.log("Selected Image URI: ", imageUri);
+
+      setMessages((prev) => [
+        ...prev,
+        { text: "Image uploaded successfully. Analyzing...", type: "bot" },
+      ]);
+
+      // Placeholder for image analysis
+      setMessages((prev) => [
+        ...prev,
+        {
+          text: "Image analysis feature is in development. Stay tuned!",
+          type: "bot",
+        },
+      ]);
+    }
+  } catch (error) {
+    console.error("Error launching image library: ", error);
+  }
+};
 
   const renderMessage = ({ item }) => (
     <View
@@ -184,7 +190,7 @@ const styles = StyleSheet.create({
   messageText: { color: "#fff", fontSize: 14 },
   userMessage: {
     alignSelf: "flex-end",
-    backgroundColor: "#4CAF50",
+    
   },
   botMessage: {
     alignSelf: "flex-start",
