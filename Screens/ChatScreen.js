@@ -12,16 +12,17 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import * as GoogleGenerativeAI from "@google/generative-ai";
 import { launchImageLibrary } from "react-native-image-picker";
-import RNFetchBlob from 'rn-fetch-blob';  // Import rn-fetch-blob
+import RNFetchBlob from "rn-fetch-blob";
 
 const ChatScreen = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [imageUri, setImageUri] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const TEXT_API_KEY = "AIzaSyAQzJer7LGPAp8kkG8JOjrsrfY9PjWd7hc"; // API Key for text generation
-  const VISION_API_KEY = "AIzaSyDnUzQV5SMKTh6CQ2zVTNtj0waBd0dXYPQ"; // API Key for Vision API
-  const VISION_API_URL = "https://vision.googleapis.com/v1/images:annotate?key=" + VISION_API_KEY;
+  const TEXT_API_KEY = "AIzaSyAQzJer7LGPAp8kkG8JOjrsrfY9PjWd7hc"; // Replace with your Text API key
+  const VISION_API_KEY = "AIzaSyDnUzQV5SMKTh6CQ2zVTNtj0waBd0dXYPQ"; // Replace with your Vision API key
+  const VISION_API_URL = `https://vision.googleapis.com/v1/images:annotate?key=${VISION_API_KEY}`;
 
   useEffect(() => {
     const welcomeMessage = async () => {
@@ -32,35 +33,59 @@ const ChatScreen = () => {
       );
       const responseText = result.response.text();
 
-      setMessages([
-        {
-          text: responseText,
-          type: "bot",
-        },
-      ]);
+      setMessages([{ text: responseText, type: "bot" }]);
     };
 
     welcomeMessage();
   }, []);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() && !imageUri) return;
 
-    const userMessage = { text: input, type: "user" };
+    const userMessage = {
+      text: input,
+      type: "user",
+      imageUri,
+    };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    setImageUri(null);
     setLoading(true);
 
     try {
+      let visionResult = "";
+      if (imageUri) {
+        // Analyze the image using Vision API
+        const base64Image = await RNFetchBlob.fs.readFile(imageUri, "base64");
+        const visionResponse = await fetch(VISION_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            requests: [
+              {
+                image: { content: base64Image },
+                features: [{ type: "LABEL_DETECTION", maxResults: 5 }],
+              },
+            ],
+          }),
+        });
+
+        const visionData = await visionResponse.json();
+        const labels = visionData.responses[0]?.labelAnnotations || [];
+        visionResult = labels.map((label) => label.description).join(", ");
+      }
+
       const genAI = new GoogleGenerativeAI.GoogleGenerativeAI(TEXT_API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-pro" });
       const healthContext =
-        "You are a health assistant chatbot. Provide health tips, diagnosis based on symptoms, psychological advice, and suggest medications where relevant. Only answer health-related queries.";
-      const result = await model.generateContent(`${healthContext}\n${input}`);
+        "You are a health assistant chatbot. Provide health tips, diagnosis based on symptoms, psychological advice, and suggest medications where relevant. Analyze images and include their insights.";
+      const prompt = `${healthContext}\nUser input: ${input}\nImage analysis: ${visionResult}`;
+      const result = await model.generateContent(prompt);
       const responseText = result.response.text();
 
       setMessages((prev) => [...prev, { text: responseText, type: "bot" }]);
     } catch (error) {
+      console.error("Error handling message:", error);
       setMessages((prev) => [
         ...prev,
         { text: "Error: Unable to fetch response. Please try again.", type: "bot" },
@@ -72,84 +97,24 @@ const ChatScreen = () => {
 
   const handleImageUpload = async () => {
     try {
-      const result = await launchImageLibrary({
-        mediaType: "photo", // Allow photo selection
-        quality: 1, // High-quality images
-      });
-  
-      if (result.didCancel) {
-        console.log("User cancelled image picker");
+      const result = await launchImageLibrary({ mediaType: "photo", quality: 1 });
+
+      if (result.didCancel || result.errorCode) {
+        console.log("Image selection cancelled or failed");
         return;
       }
-  
-      if (result.errorCode) {
-        console.error("Image Picker Error: ", result.errorMessage);
-        return;
-      }
-  
+
       if (result.assets && result.assets.length > 0) {
-        const imageUri = result.assets[0].uri; // Extract image URI
-        console.log("Selected Image URI: ", imageUri);
-  
-        setMessages((prev) => [
-          ...prev,
-          { text: "Image uploaded successfully. Analyzing...", type: "bot" },
-        ]);
-  
-        // Use rn-fetch-blob to read the image and convert it to base64
-        const base64Image = await RNFetchBlob.fs.readFile(imageUri, 'base64');
-        console.log("Base64 Encoded Image: ", base64Image); // Log the base64 string
-  
-        // Send the image to Google Vision API
-        const visionResponse = await fetch(VISION_API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            requests: [
-              {
-                image: {
-                  content: base64Image, // Sending base64 encoded image
-                },
-                features: [
-                  {
-                    type: "LABEL_DETECTION", // Feature to detect labels
-                    maxResults: 5, // Max number of results you want
-                  },
-                ],
-              },
-            ],
-          }),
-        });
-  
-        // Log the response from the Vision API
-        const visionData = await visionResponse.json();
-        console.log("Google Vision API Response: ", visionData);
-  
-        if (visionData.error) {
-          console.error("Vision API Error: ", visionData.error);
-          throw new Error("Error analyzing image with Vision API");
-        }
-  
-        const labels = visionData.responses[0].labelAnnotations || [];
-        const description = labels
-          .map((label) => label.description)
-          .join(", ");
-        setMessages((prev) => [
-          ...prev,
-          { text: `Image analysis result: ${description}`, type: "bot" },
-        ]);
+        setImageUri(result.assets[0].uri);
       }
     } catch (error) {
-      console.error("Error launching image library or analyzing image: ", error);
-      setMessages((prev) => [
-        ...prev,
-        { text: "Error: Unable to analyze image. Please try again.", type: "bot" },
-      ]);
+      console.error("Error uploading image:", error);
     }
   };
-  
+
+  const handleRemoveImage = () => {
+    setImageUri(null);
+  };
 
   const renderMessage = ({ item }) => (
     <View
@@ -158,6 +123,11 @@ const ChatScreen = () => {
         item.type === "user" ? styles.userMessage : styles.botMessage,
       ]}
     >
+      {item.imageUri && (
+        <View style={styles.imageContainer}>
+          <Image source={{ uri: item.imageUri }} style={styles.messageImage} />
+        </View>
+      )}
       <View style={styles.messageBubble}>
         <Text style={styles.messageText}>{item.text}</Text>
       </View>
@@ -169,7 +139,7 @@ const ChatScreen = () => {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Image
-            source={{ uri: "https://example.com/bot-avatar.png" }} // Replace with actual bot avatar
+            source={{ uri: "https://example.com/bot-avatar.png" }}
             style={styles.botAvatar}
           />
           <View>
@@ -185,6 +155,15 @@ const ChatScreen = () => {
         keyExtractor={(item, index) => index.toString()}
         contentContainerStyle={styles.messagesList}
       />
+
+      {imageUri && (
+        <View style={styles.imagePreviewContainer}>
+          <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+          <TouchableOpacity style={styles.removeImageButton} onPress={handleRemoveImage}>
+            <FontAwesome name="remove" size={24} color="red" />
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={styles.inputSection}>
         <TouchableOpacity style={styles.iconButton} onPress={handleImageUpload}>
@@ -220,7 +199,7 @@ const styles = StyleSheet.create({
   botName: { color: "#fff", fontSize: 18, fontWeight: "bold" },
   onlineStatus: { color: "#4CAF50", fontSize: 12 },
   messagesList: { flexGrow: 1, paddingHorizontal: 15, paddingTop: 10 },
-  messageContainer: { marginVertical: 8, flexDirection: "row", justifyContent: "flex-start" },
+  messageContainer: { marginVertical: 8 },
   messageBubble: {
     maxWidth: "70%",
     backgroundColor: "#333",
@@ -228,14 +207,14 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   messageText: { color: "#fff", fontSize: 14 },
-  userMessage: {
-    alignSelf: "flex-end",
-
+  messageImage: {
+    width: 200,
+    height: 200,
+    borderRadius: 10,
+    marginBottom: 5,
   },
-  botMessage: {
-    alignSelf: "flex-start",
-    backgroundColor: "#333",
-  },
+  userMessage: { alignSelf: "flex-end" },
+  botMessage: { alignSelf: "flex-start" },
   inputSection: {
     flexDirection: "row",
     alignItems: "center",
@@ -254,6 +233,19 @@ const styles = StyleSheet.create({
     paddingLeft: 15,
   },
   sendButton: { marginLeft: 10 },
+  imagePreviewContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginHorizontal: 15,
+    marginBottom: 10,
+  },
+  imagePreview: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+  },
+  removeImageButton: { padding: 10 },
 });
 
 export default ChatScreen;
