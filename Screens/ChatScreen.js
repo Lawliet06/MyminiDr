@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react"; 
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   FlatList,
   Image,
   StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
@@ -19,6 +20,7 @@ const ChatScreen = () => {
   const [input, setInput] = useState("");
   const [imageUri, setImageUri] = useState(null);
   const [loading, setLoading] = useState(false);
+  const flatListRef = useRef(null); // Reference for FlatList
 
   const TEXT_API_KEY = "AIzaSyAQzJer7LGPAp8kkG8JOjrsrfY9PjWd7hc"; // Replace with your Text API key
   const VISION_API_KEY = "AIzaSyDnUzQV5SMKTh6CQ2zVTNtj0waBd0dXYPQ"; // Replace with your Vision API key
@@ -92,6 +94,8 @@ const ChatScreen = () => {
       ]);
     } finally {
       setLoading(false);
+      // Scroll to the bottom of the chat
+      flatListRef.current?.scrollToEnd({ animated: true });
     }
   };
 
@@ -150,10 +154,12 @@ const ChatScreen = () => {
       </View>
 
       <FlatList
+        ref={flatListRef} // Attach the FlatList reference
         data={messages}
         renderItem={renderMessage}
         keyExtractor={(item, index) => index.toString()}
         contentContainerStyle={styles.messagesList}
+        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
       />
 
       {imageUri && (
@@ -162,6 +168,13 @@ const ChatScreen = () => {
           <TouchableOpacity style={styles.removeImageButton} onPress={handleRemoveImage}>
             <FontAwesome name="remove" size={24} color="red" />
           </TouchableOpacity>
+        </View>
+      )}
+
+      {loading && (
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color="#4CAF50" />
+          <Text style={styles.loaderText}>Diagnosing...</Text>
         </View>
       )}
 
@@ -246,6 +259,16 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   removeImageButton: { padding: 10 },
+  loaderContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    margin: 10,
+  },
+  loaderText: {
+    color: "#4CAF50",
+    marginLeft: 10,
+  },
 });
 
 export default ChatScreen;
