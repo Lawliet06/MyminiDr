@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Text,
   View,
@@ -6,17 +6,19 @@ import {
   TextInput,
   StyleSheet,
   ScrollView,
+  ActivityIndicator 
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Modal from "react-native-modal";
 import Icon from "react-native-vector-icons/FontAwesome"; // For icons
-import { FIREBASE_AUTH } from "../Firebaseconfig";
+import { FIREBASE_AUTH, FIREBASE_DB } from "../Firebaseconfig";
 import {
   deleteUser,
   reauthenticateWithCredential,
   EmailAuthProvider,
 } from "firebase/auth";
+import { collection, getDocs } from "firebase/firestore";
 
 const Home = () => {
   const navigation = useNavigation();
@@ -24,6 +26,7 @@ const Home = () => {
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [isPasswordModalVisible, setPasswordModalVisible] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
+  const [chatHistory, setChatHistory] = useState([]);
 
   const handleExit = () => navigation.navigate("Welcome");
 
@@ -56,6 +59,41 @@ const Home = () => {
       setPasswordModalVisible(false);
     }
   };
+
+  // Fetch chat history from the user's specific path
+  const fetchChatHistory = async () => {
+    try {
+      const userId = FIREBASE_AUTH.currentUser?.uid;
+      if (!userId) {
+        console.log("No user logged in");
+        return;
+      }
+
+      // Query chats from the correct user's path
+      const querySnapshot = await getDocs(collection(FIREBASE_DB, `users/${userId}/chats`));
+      const chats = [];
+      querySnapshot.forEach((doc) => {
+        const chatData = doc.data();
+        
+        // Filter out messages that are from the bot (i.e., type is 'user')
+        const userMessages = chatData.messages?.filter((message) => message.type === "user");
+
+        // If there are any user messages, set the first message as the title
+        if (userMessages && userMessages.length > 0) {
+          const firstMessage = userMessages[0]?.text || ""; // Get the first user message
+          const title = firstMessage.split(" ").slice(0, 5).join(" "); // Get the first 5 words
+          chats.push({ id: doc.id, title, ...chatData });
+        }
+      });
+      setChatHistory(chats);
+    } catch (error) {
+      console.error("Error fetching chat history:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchChatHistory();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -104,7 +142,7 @@ const Home = () => {
           {/* Chat Card */}
           <TouchableOpacity
             style={styles.card}
-            onPress={() => navigation.navigate("ChatScreen")} // Replace with actual navigation or logic
+            onPress={() => navigation.navigate("ChatScreen")}
           >
             <Icon name="comment" size={50} color="#4CAF50" />
             <Text style={styles.cardText}>Chat with Simy</Text>
@@ -113,7 +151,7 @@ const Home = () => {
           {/* Talk Card */}
           <TouchableOpacity
             style={styles.card}
-            onPress={() => navigation.navigate("ChatScreen")} // Replace with actual navigation or logic
+            onPress={() => navigation.navigate("ChatScreen")}
           >
             <Icon name="microphone" size={50} color="#2196F3" />
             <Text style={styles.cardText}>Talk with Simy</Text>
@@ -123,20 +161,34 @@ const Home = () => {
         {/* History Section */}
         <Text style={styles.sectionTitle}>History</Text>
         <ScrollView style={styles.historyContainer}>
-          {[
-            "Color recommendation for Finance app",
-            "5 slogan for travel website",
-            "Fitness app for everyone",
-          ].map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.historyItem}
-              onPress={() => alert(`Clicked on: ${item}`)} // Replace with actual navigation or logic
-            >
-              <Icon name="clock-o" size={18} color="#fff" />
-              <Text style={styles.historyText}>{item}</Text>
-            </TouchableOpacity>
-          ))}
+          {chatHistory.length > 0
+            ? chatHistory.map((chat, index) => (
+                <TouchableOpacity
+                  key={chat.id}
+                  style={styles.historyItem}
+                  onPress={() => {
+                    console.log("Navigating to chat with full chat data:", JSON.stringify(chat));
+                    navigation.navigate("ChatScreen", { 
+                      screen: "Chat", // Specify the screen name if using nested navigation
+                      params: {
+                        chatData: chat,
+                        chatId: chat.id
+                      }
+                    });
+                  }}
+                >
+                  <Icon name="clock-o" size={18} color="#fff" />
+                  <Text style={styles.historyText}>
+                    {chat.title || `Chat ${index + 1}`}
+                  </Text>
+                </TouchableOpacity>
+              ))
+            : (
+              <View style={styles.loaderContainer}>
+                <ActivityIndicator size="large" color="#4CAF50" />
+                <Text style={styles.loaderText}>Loading previous chats...</Text>
+              </View>
+            )}
         </ScrollView>
       </ScrollView>
 
@@ -207,6 +259,18 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 18, marginBottom: 10 },
   input: { borderBottomWidth: 1, marginBottom: 20 },
   confirmText: { color: "blue", textAlign: "center" },
+
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loaderText: {
+    color: '#fff',
+    marginTop: 10,
+    fontSize: 16,
+  }
 });
 
 export default Home;

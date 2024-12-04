@@ -1,7 +1,7 @@
 import NavLogin from "./NavLogin";
 import NavSignUp from "./NavSignUp";
 import Home from "./Home";
-import Chat from "./NavChat";
+import ChatScreen from "./NavChat";
 
 import Welcome from "./Welcome";
 
@@ -25,8 +25,13 @@ const App = () => {
       />
       <Stack.Screen
         name="ChatScreen"
-        component={Chat}
-        options={{ headerShown: false, headerTitleAlign: "center" }}
+        component={ChatScreen}
+        options={({ route }) => ({
+          title:
+            route.params?.params?.chatData?.title ||
+            route.params?.chatData?.title ||
+            "Health Assistant",
+        })}
       />
       <Stack.Screen
         name="NavLogin"

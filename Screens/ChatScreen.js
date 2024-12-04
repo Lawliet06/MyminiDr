@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react"; 
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -8,48 +8,150 @@ import {
   Image,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import * as GoogleGenerativeAI from "@google/generative-ai";
 import { launchImageLibrary } from "react-native-image-picker";
 import RNFetchBlob from "rn-fetch-blob";
+import { FIREBASE_DB } from "../Firebaseconfig";
+import { collection, addDoc, doc, setDoc, getDoc } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
-const ChatScreen = () => {
+const ChatScreen = ({ route, navigation }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [imageUri, setImageUri] = useState(null);
   const [loading, setLoading] = useState(false);
-  const flatListRef = useRef(null); // Reference for FlatList
+  const [currentChatId, setCurrentChatId] = useState(null);
+  const flatListRef = useRef(null);
 
-  const TEXT_API_KEY = "AIzaSyAQzJer7LGPAp8kkG8JOjrsrfY9PjWd7hc"; // Replace with your Text API key
-  const VISION_API_KEY = "AIzaSyDnUzQV5SMKTh6CQ2zVTNtj0waBd0dXYPQ"; // Replace with your Vision API key
+  // Extract chat ID from route params, prioritizing different possible sources
+  const initialChatId =
+    route.params?.chatId || route.params?.chatData?.id || route.params?.id;
+  const userId = getAuth().currentUser.uid;
+
+  const TEXT_API_KEY = "AIzaSyAQzJer7LGPAp8kkG8JOjrsrfY9PjWd7hc";
+  const VISION_API_KEY = "AIzaSyDnUzQV5SMKTh6CQ2zVTNtj0waBd0dXYPQ";
   const VISION_API_URL = `https://vision.googleapis.com/v1/images:annotate?key=${VISION_API_KEY}`;
 
   useEffect(() => {
-    const welcomeMessage = async () => {
-      const genAI = new GoogleGenerativeAI.GoogleGenerativeAI(TEXT_API_KEY);
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-      const result = await model.generateContent(
-        "Welcome to Health Assistant Chat! I can help with health tips, diagnosis based on symptoms, psychological advice, and suggesting medications."
-      );
-      const responseText = result.response.text();
-
-      setMessages([{ text: responseText, type: "bot" }]);
+    console.log("Initial Render - ChatScreen");
+    console.log("Full Route Object:", JSON.stringify(route, null, 2));
+    console.log("Full Route Params:", JSON.stringify(route.params, null, 2));
+    
+    const loadChatHistory = async () => {
+      try {
+        // Check for chat data in nested params
+        const passedChatData = route.params?.params?.chatData || route.params?.chatData;
+        
+        console.log("Passed Chat Data:", JSON.stringify(passedChatData, null, 2));
+        
+        if (passedChatData) {
+          console.log("Loading chat from passed data:", JSON.stringify(passedChatData, null, 2));
+          
+          // Set messages from the passed chat data
+          if (passedChatData.messages && passedChatData.messages.length > 0) {
+            setMessages(passedChatData.messages);
+            setCurrentChatId(passedChatData.id);
+            return;
+          }
+        }
+  
+        // If no passed data, fall back to creating welcome message
+        await createWelcomeMessage();
+      } catch (error) {
+        console.error("Error loading chat history:", error);
+        Alert.alert("Error", "Could not load chat history");
+        await createWelcomeMessage();
+      }
     };
 
-    welcomeMessage();
-  }, []);
+    const createWelcomeMessage = async () => {
+      try {
+        console.log("Creating welcome message");
+        const genAI = new GoogleGenerativeAI.GoogleGenerativeAI(TEXT_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const result = await model.generateContent(
+          "Welcome to Health Assistant Chat! I can help with health tips, diagnosis based on symptoms, psychological advice, and suggesting medications."
+        );
+        const responseText = result.response.text();
+
+        const welcomeMessage = { text: responseText, type: "bot" };
+        setMessages([welcomeMessage]);
+        console.log("Welcome message created");
+      } catch (error) {
+        console.error("Error creating welcome message:", error);
+      }
+    };
+
+    loadChatHistory();
+  }, [initialChatId, userId]);
+
+  const saveChatToFirestore = async (updatedMessages) => {
+    try {
+      const currentUser = getAuth().currentUser;
+      if (!currentUser) {
+        console.error("No user is logged in.");
+        return null;
+      }
+
+      const userId = currentUser.uid;
+
+      if (currentChatId) {
+        // Update existing chat
+        const chatRef = doc(
+          FIREBASE_DB,
+          "users",
+          userId,
+          "chats",
+          currentChatId
+        );
+        await setDoc(
+          chatRef,
+          {
+            messages: updatedMessages,
+            title:
+              updatedMessages[0]?.text?.split(" ").slice(0, 5).join(" ") ||
+              "Untitled Chat",
+          },
+          { merge: true }
+        );
+        return currentChatId;
+      } else {
+        // Create new chat
+        const newChatRef = await addDoc(
+          collection(FIREBASE_DB, "users", userId, "chats"),
+          {
+            messages: updatedMessages,
+            title:
+              updatedMessages[0]?.text?.split(" ").slice(0, 5).join(" ") ||
+              "Untitled Chat",
+          }
+        );
+        setCurrentChatId(newChatRef.id);
+        return newChatRef.id;
+      }
+    } catch (error) {
+      console.error("Error saving chat to Firestore:", error);
+      return null;
+    }
+  };
 
   const handleSend = async () => {
     if (!input.trim() && !imageUri) return;
+
+    console.log("Sending message");
+    console.log("Current Chat ID before send:", currentChatId);
 
     const userMessage = {
       text: input,
       type: "user",
       imageUri,
     };
-    setMessages((prev) => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInput("");
     setImageUri(null);
     setLoading(true);
@@ -57,7 +159,6 @@ const ChatScreen = () => {
     try {
       let visionResult = "";
       if (imageUri) {
-        // Analyze the image using Vision API
         const base64Image = await RNFetchBlob.fs.readFile(imageUri, "base64");
         const visionResponse = await fetch(VISION_API_URL, {
           method: "POST",
@@ -85,23 +186,33 @@ const ChatScreen = () => {
       const result = await model.generateContent(prompt);
       const responseText = result.response.text();
 
-      setMessages((prev) => [...prev, { text: responseText, type: "bot" }]);
+      const botMessage = { text: responseText, type: "bot" };
+      const finalMessages = [...updatedMessages, botMessage];
+      setMessages(finalMessages);
+
+      // Save chat and get the chat ID
+      const savedChatId = await saveChatToFirestore(finalMessages);
+
+      console.log("Saved Chat ID:", savedChatId);
     } catch (error) {
       console.error("Error handling message:", error);
-      setMessages((prev) => [
-        ...prev,
-        { text: "Error: Unable to fetch response. Please try again.", type: "bot" },
-      ]);
+      const errorMessage = {
+        text: "Error: Unable to fetch response. Please try again.",
+        type: "bot",
+      };
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setLoading(false);
-      // Scroll to the bottom of the chat
       flatListRef.current?.scrollToEnd({ animated: true });
     }
   };
 
   const handleImageUpload = async () => {
     try {
-      const result = await launchImageLibrary({ mediaType: "photo", quality: 1 });
+      const result = await launchImageLibrary({
+        mediaType: "photo",
+        quality: 1,
+      });
 
       if (result.didCancel || result.errorCode) {
         console.log("Image selection cancelled or failed");
@@ -159,13 +270,18 @@ const ChatScreen = () => {
         renderItem={renderMessage}
         keyExtractor={(item, index) => index.toString()}
         contentContainerStyle={styles.messagesList}
-        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+        onContentSizeChange={() =>
+          flatListRef.current?.scrollToEnd({ animated: true })
+        }
       />
 
       {imageUri && (
         <View style={styles.imagePreviewContainer}>
           <Image source={{ uri: imageUri }} style={styles.imagePreview} />
-          <TouchableOpacity style={styles.removeImageButton} onPress={handleRemoveImage}>
+          <TouchableOpacity
+            style={styles.removeImageButton}
+            onPress={handleRemoveImage}
+          >
             <FontAwesome name="remove" size={24} color="red" />
           </TouchableOpacity>
         </View>
@@ -189,7 +305,11 @@ const ChatScreen = () => {
           placeholderTextColor="#aaa"
           style={styles.input}
         />
-        <TouchableOpacity style={styles.sendButton} onPress={handleSend} disabled={loading}>
+        <TouchableOpacity
+          style={styles.sendButton}
+          onPress={handleSend}
+          disabled={loading}
+        >
           <Icon name="send" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
