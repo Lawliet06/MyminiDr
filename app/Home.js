@@ -6,7 +6,7 @@ import {
   TextInput,
   StyleSheet,
   ScrollView,
-  ActivityIndicator 
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -18,7 +18,7 @@ import {
   reauthenticateWithCredential,
   EmailAuthProvider,
 } from "firebase/auth";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, onSnapshot, doc, getDoc } from "firebase/firestore";
 
 const Home = () => {
   const navigation = useNavigation();
@@ -27,6 +27,8 @@ const Home = () => {
   const [isPasswordModalVisible, setPasswordModalVisible] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
+  const [isLoading, setIsLoading] = useState(true); // For global loader
+  const [userName, setUserName] = useState("User");
 
   const handleExit = () => navigation.navigate("Welcome");
 
@@ -60,40 +62,90 @@ const Home = () => {
     }
   };
 
-  // Fetch chat history from the user's specific path
   const fetchChatHistory = async () => {
     try {
       const userId = FIREBASE_AUTH.currentUser?.uid;
       if (!userId) {
         console.log("No user logged in");
+        setIsLoading(false);
         return;
       }
 
-      // Query chats from the correct user's path
-      const querySnapshot = await getDocs(collection(FIREBASE_DB, `users/${userId}/chats`));
-      const chats = [];
-      querySnapshot.forEach((doc) => {
-        const chatData = doc.data();
-        
-        // Filter out messages that are from the bot (i.e., type is 'user')
-        const userMessages = chatData.messages?.filter((message) => message.type === "user");
+      const chatsRef = collection(FIREBASE_DB, `users/${userId}/chats`);
 
-        // If there are any user messages, set the first message as the title
-        if (userMessages && userMessages.length > 0) {
-          const firstMessage = userMessages[0]?.text || ""; // Get the first user message
-          const title = firstMessage.split(" ").slice(0, 5).join(" "); // Get the first 5 words
-          chats.push({ id: doc.id, title, ...chatData });
+      const unsubscribe = onSnapshot(
+        chatsRef,
+        (querySnapshot) => {
+          const chats = [];
+          querySnapshot.forEach((doc) => {
+            const chatData = doc.data();
+
+            const firstUserMessage = chatData.messages?.find((msg) => msg.type === "user");
+            const title = firstUserMessage
+              ? firstUserMessage.text.split(" ").slice(0, 5).join(" ")
+              : `Chat ${chats.length + 1}`;
+
+            chats.push({ id: doc.id, title, ...chatData });
+          });
+
+          setChatHistory(chats);
+          setIsLoading(false);
+        },
+        (error) => {
+          console.error("Error listening to chat history:", error);
+          setIsLoading(false);
         }
-      });
-      setChatHistory(chats);
+      );
+
+      return unsubscribe;
     } catch (error) {
       console.error("Error fetching chat history:", error);
+      setIsLoading(false);
+    }
+  };
+
+  const fetchUserData = async () => {
+    try {
+      const userId = FIREBASE_AUTH.currentUser?.uid;
+      if (!userId) return;
+
+      const userDoc = await getDoc(doc(FIREBASE_DB, "users", userId));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        if (userData.fullName) {
+          setUserName(userData.fullName);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
     }
   };
 
   useEffect(() => {
-    fetchChatHistory();
+    const initialize = async () => {
+      await fetchUserData();
+      await fetchChatHistory();
+      setIsLoading(false); // Ensure global loader hides after initialization
+    };
+
+    initialize();
+
+    return () => {
+      if (typeof unsubscribe === "function") {
+        unsubscribe();
+      }
+    };
   }, []);
+
+  if (isLoading) {
+    // Global loader when the app is initializing
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#4CAF50" />
+        <Text style={styles.loaderText}>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -127,7 +179,7 @@ const Home = () => {
         </View>
       )}
 
-      {/* Hamburger Menu Button */}
+      {/* Hamburger Menu */}
       <TouchableOpacity
         style={styles.hamburgerMenu}
         onPress={() => setSidebarVisible(true)}
@@ -137,7 +189,7 @@ const Home = () => {
 
       {/* Main Content */}
       <ScrollView contentContainerStyle={styles.mainContent}>
-        <Text style={styles.welcomeText}>Welcome, User!</Text>
+        <Text style={styles.welcomeText}>Welcome, {userName}!</Text>
         <View style={styles.cardsContainer}>
           {/* Chat Card */}
           <TouchableOpacity
@@ -161,34 +213,30 @@ const Home = () => {
         {/* History Section */}
         <Text style={styles.sectionTitle}>History</Text>
         <ScrollView style={styles.historyContainer}>
-          {chatHistory.length > 0
-            ? chatHistory.map((chat, index) => (
-                <TouchableOpacity
-                  key={chat.id}
-                  style={styles.historyItem}
-                  onPress={() => {
-                    console.log("Navigating to chat with full chat data:", JSON.stringify(chat));
-                    navigation.navigate("ChatScreen", { 
-                      screen: "Chat", // Specify the screen name if using nested navigation
-                      params: {
-                        chatData: chat,
-                        chatId: chat.id
-                      }
-                    });
-                  }}
-                >
-                  <Icon name="clock-o" size={18} color="#fff" />
-                  <Text style={styles.historyText}>
-                    {chat.title || `Chat ${index + 1}`}
-                  </Text>
-                </TouchableOpacity>
-              ))
-            : (
-              <View style={styles.loaderContainer}>
-                <ActivityIndicator size="large" color="#4CAF50" />
-                <Text style={styles.loaderText}>Loading previous chats...</Text>
-              </View>
-            )}
+          {chatHistory.length > 0 ? (
+            chatHistory.map((chat, index) => (
+              <TouchableOpacity
+                key={chat.id}
+                style={styles.historyItem}
+                onPress={() =>
+                  navigation.navigate("ChatScreen", {
+                    screen: "Chat",
+                    params: {
+                      chatData: chat,
+                      chatId: chat.id,
+                    },
+                  })
+                }
+              >
+                <Icon name="clock-o" size={18} color="#fff" />
+                <Text style={styles.historyText}>{chat.title}</Text>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.loaderContainer}>
+              <Text style={styles.loaderText}>No chat history found</Text>
+            </View>
+          )}
         </ScrollView>
       </ScrollView>
 
@@ -235,7 +283,11 @@ const styles = StyleSheet.create({
   closeSidebar: { position: "absolute", top: 20, right: 20 },
   mainContent: { alignItems: "center", padding: 20, marginTop: 80 },
   welcomeText: { fontSize: 24, color: "#fff", marginBottom: 20 },
-  cardsContainer: { flexDirection: "row", justifyContent: "space-around", width: "100%" },
+  cardsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
+  },
   card: {
     backgroundColor: "#1e1e1e",
     padding: 20,
@@ -244,7 +296,12 @@ const styles = StyleSheet.create({
     width: "40%",
   },
   cardText: { color: "#fff", marginTop: 10 },
-  sectionTitle: { fontSize: 20, color: "#fff", marginVertical: 20, alignSelf: "flex-start" },
+  sectionTitle: {
+    fontSize: 20,
+    color: "#fff",
+    marginVertical: 20,
+    alignSelf: "flex-start",
+  },
   historyContainer: { width: "100%" },
   historyItem: {
     flexDirection: "row",
@@ -262,15 +319,12 @@ const styles = StyleSheet.create({
 
   loaderContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
+    backgroundColor: "#121212",
   },
-  loaderText: {
-    color: '#fff',
-    marginTop: 10,
-    fontSize: 16,
-  }
+  loaderText: { color: "#fff", marginTop: 10 },
 });
 
 export default Home;

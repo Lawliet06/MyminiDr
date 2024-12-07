@@ -96,9 +96,15 @@ const ChatScreen = ({ route, navigation }) => {
         console.error("No user is logged in.");
         return null;
       }
-
+  
       const userId = currentUser.uid;
-
+      
+      // Find the first user message
+      const firstUserMessage = updatedMessages.find(msg => msg.type === 'user');
+      const chatTitle = firstUserMessage 
+        ? firstUserMessage.text.split(" ").slice(0, 5).join(" ") 
+        : "Untitled Chat";
+  
       if (currentChatId) {
         // Update existing chat
         const chatRef = doc(
@@ -112,9 +118,7 @@ const ChatScreen = ({ route, navigation }) => {
           chatRef,
           {
             messages: updatedMessages,
-            title:
-              updatedMessages[0]?.text?.split(" ").slice(0, 5).join(" ") ||
-              "Untitled Chat",
+            title: chatTitle,
           },
           { merge: true }
         );
@@ -125,9 +129,7 @@ const ChatScreen = ({ route, navigation }) => {
           collection(FIREBASE_DB, "users", userId, "chats"),
           {
             messages: updatedMessages,
-            title:
-              updatedMessages[0]?.text?.split(" ").slice(0, 5).join(" ") ||
-              "Untitled Chat",
+            title: chatTitle,
           }
         );
         setCurrentChatId(newChatRef.id);
