@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "320612794855",
+    "firebase_url": "https://my-mini-dr-default-rtdb.firebaseio.com",
+    "project_id": "my-mini-dr",
+    "storage_bucket": "my-mini-dr.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:320612794855:android:24108ca28b59bc3f363d42",
+        "android_client_info": {
+          "package_name": "com.black_culture_apps.MyminiDr"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "320612794855-3c2406fj7dnnvcja7llmuthkrvc16pkb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.black_culture_apps.MyminiDr",
+            "certificate_hash": "55362f95605520665ed3fceea3da4e007b219620"
+          }
+        },
+        {
+          "client_id": "320612794855-5bc2l9vq2lqa0h10uji0hd9a74jj08n6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBkplGQtiqUnulk68hL191N6gj1f5F6UkA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "320612794855-5bc2l9vq2lqa0h10uji0hd9a74jj08n6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

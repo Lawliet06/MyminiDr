@@ -1,6 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
-import { ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  ScrollView,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
@@ -10,17 +15,21 @@ import CustomButton from "../components/CustomButton";
 import Loginsvg from "../assets/images/icons/login.svg";
 
 import Googlesvg from "../assets/images/icons/google.svg";
+import { GoogleSignin, statusCodes  } from "@react-native-google-signin/google-signin";
+
 import Facebooksvg from "../assets/images/icons/facebook.svg";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { FIREBASE_AUTH } from "../Firebaseconfig";
 import {
+  getAuth, 
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   GoogleAuthProvider,
-  FacebookAuthProvider,
-  signInWithPopup
+  signInWithCredential 
 } from "firebase/auth";
+
+
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -75,7 +84,7 @@ const LoginScreen = ({ navigation }) => {
       const response = await signInWithEmailAndPassword(auth, email, password);
       console.log(response);
       alert("Login was successful! Check your email!");
-      await saveLoginState(); // Save login state
+      await saveLoginState();
       navigation.navigate("Home");
     } catch (error) {
       console.log("Firebase Authentication Error:", error);
@@ -93,7 +102,62 @@ const LoginScreen = ({ navigation }) => {
       setLoading(false);
     }
   };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      // Configure Google Sign-In with more explicit settings
+      await GoogleSignin.configure({
+        webClientId: "320612794855-59ghqt5fllv319mdifppf7is6poippp6.apps.googleusercontent.com",
+        offlineAccess: true,
+        scopes: ['profile', 'email'],
+        // Key addition: Force account selection
+        forceCodeForRefreshToken: true
+      });
   
+      // Sign out first to clear previous session
+      await GoogleSignin.signOut();
+  
+      // Ensure Play Services are available
+      await GoogleSignin.hasPlayServices({
+        showIfNotAvailable: true,
+        showPlayServicesUpdateDialog: true
+      });
+  
+      // Perform sign-in with account selection
+      const { data } = await GoogleSignin.signIn({
+        // Force account selection
+        prompt: 'select_account'
+      });
+  
+      // Rest of the sign-in process remains the same
+      if (!data.idToken) {
+        console.error("Detailed User Info:", data);
+        throw new Error("No valid ID token received from Google");
+      }
+  
+      const credential = GoogleAuthProvider.credential(
+        data.idToken, 
+        data.accessToken
+      );
+  
+      const response = await signInWithCredential(auth, credential);
+  
+      console.log("Google Sign-In Success:", response.user);
+      await saveLoginState();
+      navigation.navigate("Home");
+  
+    } catch (error) {
+      // Handle potential cancellation
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        console.log("Sign-in was cancelled");
+      } else {
+        console.error("Full Google Sign-In Error:", error);
+        alert("Google sign-in failed. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
@@ -159,9 +223,9 @@ const LoginScreen = ({ navigation }) => {
           Or, login with...
         </Text>
 
-        <View style={{ flexDirection: "row", justifyContent: 'space-evenly' }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
           <TouchableOpacity
-            onPress={() => {}}
+            onPress={handleGoogleSignIn}
             style={{
               backgroundColor: "#ddd",
               borderRadius: 10,
