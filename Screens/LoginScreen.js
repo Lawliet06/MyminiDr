@@ -103,14 +103,15 @@ const LoginScreen = ({ navigation }) => {
     }
   };
 
+
+
   const handleGoogleSignIn = async () => {
     try {
-      // Configure Google Sign-In with more explicit settings
+      // Configure Google Sign-In 
       await GoogleSignin.configure({
         webClientId: "320612794855-59ghqt5fllv319mdifppf7is6poippp6.apps.googleusercontent.com",
         offlineAccess: true,
         scopes: ['profile', 'email'],
-        // Key addition: Force account selection
         forceCodeForRefreshToken: true
       });
   
@@ -124,16 +125,17 @@ const LoginScreen = ({ navigation }) => {
       });
   
       // Perform sign-in with account selection
-      const { data } = await GoogleSignin.signIn({
-        // Force account selection
+      const signInResult = await GoogleSignin.signIn({
         prompt: 'select_account'
       });
   
-      // Rest of the sign-in process remains the same
-      if (!data.idToken) {
-        console.error("Detailed User Info:", data);
-        throw new Error("No valid ID token received from Google");
+      // Check if signInResult is null or undefined
+      if (!signInResult || !signInResult.data || !signInResult.data.idToken) {
+        console.log("Sign-in process was cancelled or failed");
+        return; // Exit the function
       }
+  
+      const { data } = signInResult;
   
       const credential = GoogleAuthProvider.credential(
         data.idToken, 
@@ -147,18 +149,29 @@ const LoginScreen = ({ navigation }) => {
       navigation.navigate("Home");
   
     } catch (error) {
-      // Handle potential cancellation
+      // Comprehensive error handling
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        console.log("Sign-in was cancelled");
+        console.log("Sign-in was cancelled by user");
+        // Optionally show a user-friendly message
+        // alert("Google sign-in cancelled");
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        console.log("Sign-in is already in progress");
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        console.log("Play services not available");
+        alert("Google Play services is not available");
       } else {
         console.error("Full Google Sign-In Error:", error);
+        console.error("Error Name:", error.name);
+        console.error("Error Code:", error.code);
+        console.error("Error Message:", error.message);
+        
+        // Generic error message
         alert("Google sign-in failed. Please try again.");
       }
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
       <ScrollView style={{ paddingHorizontal: 25 }}>
