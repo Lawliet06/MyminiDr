@@ -70,25 +70,34 @@ const Home = () => {
         setIsLoading(false);
         return;
       }
-
+  
       const chatsRef = collection(FIREBASE_DB, `users/${userId}/chats`);
-
+  
       const unsubscribe = onSnapshot(
         chatsRef,
         (querySnapshot) => {
           const chats = [];
           querySnapshot.forEach((doc) => {
             const chatData = doc.data();
-
+  
             const firstUserMessage = chatData.messages?.find((msg) => msg.type === "user");
             const title = firstUserMessage
               ? firstUserMessage.text.split(" ").slice(0, 5).join(" ")
               : `Chat ${chats.length + 1}`;
-
-            chats.push({ id: doc.id, title, ...chatData });
+  
+            // Add timestamp to help with sorting
+            chats.push({ 
+              id: doc.id, 
+              title, 
+              ...chatData,
+              timestamp: chatData.timestamp || Date.now() // Use existing timestamp or current time
+            });
           });
-
-          setChatHistory(chats);
+  
+          // Sort chats in reverse chronological order (latest first)
+          const sortedChats = chats.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+  
+          setChatHistory(sortedChats);
           setIsLoading(false);
         },
         (error) => {
@@ -96,7 +105,7 @@ const Home = () => {
           setIsLoading(false);
         }
       );
-
+  
       return unsubscribe;
     } catch (error) {
       console.error("Error fetching chat history:", error);
