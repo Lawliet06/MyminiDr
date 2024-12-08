@@ -1,6 +1,9 @@
 <resources>
-  <string name="app_name">Test</string>
+  <string name="app_name">My_Mini_Dr</string>
   <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
   <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
   <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
+    <string name="facebook_app_id">1107601397056061</string>
+    <string name="fb_login_protocol_scheme">1107601397056061</string>
+    <string name="facebook_client_token">5c603f7faf68c78b65fa179cea65a904</string>
 </resources>
