@@ -29,7 +29,9 @@ import {
   signInWithCredential 
 } from "firebase/auth";
 
+import { LoginManager, AccessToken } from 'react-native-fbsdk-next';
 
+import { Settings } from 'react-native-fbsdk-next';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -103,7 +105,64 @@ const LoginScreen = ({ navigation }) => {
     }
   };
 
-
+  const handleFacebookLogin = async () => {
+    try {
+      setLoading(true);
+  
+      if (!LoginManager) {
+        throw new Error('Facebook LoginManager not initialized');
+      }
+    
+      // Initialize Facebook SDK if needed
+      await Settings.initializeSDK();
+        
+      // Request login permissions
+      const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
+        
+      if (result.isCancelled) {
+        console.log("User cancelled Facebook login");
+        // Just return silently without showing an error alert
+        return;
+      }
+  
+      // Get access token
+      const data = await AccessToken.getCurrentAccessToken();
+        
+      if (!data) {
+        throw new Error('Something went wrong obtaining access token');
+      }
+  
+      // Create a Firebase credential with the Facebook access token
+      const facebookCredential = FacebookAuthProvider.credential(data.accessToken);
+  
+      // Sign in with the credential
+      const response = await signInWithCredential(auth, facebookCredential);
+        
+      console.log("Facebook Sign-In Success:", response.user);
+      await saveLoginState();
+      navigation.navigate("Home");
+  
+    } catch (error) {
+      console.error("Facebook Sign-In Error:", error);
+      
+      // More specific error handling
+      if (error.message === 'User cancelled the login process') {
+        // Don't show an alert for cancellation
+        console.log("User cancelled Facebook login");
+      } else if (error.message === 'Facebook LoginManager not initialized') {
+        alert("Facebook login is not properly configured. Please try again later.");
+      } else if (error.code === 'auth/account-exists-with-different-credential') {
+        alert("An account already exists with the same email address but different sign-in credentials. Try signing in a different way.");
+      } else if (error.code === 'auth/invalid-credential') {
+        alert("The Facebook login credentials are invalid. Please try again.");
+      } else {
+        // Generic error for other cases
+        alert("Something went wrong with Facebook sign-in. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGoogleSignIn = async () => {
     try {
@@ -174,109 +233,109 @@ const LoginScreen = ({ navigation }) => {
   };
   return (
     <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
-      <ScrollView style={{ paddingHorizontal: 25 }}>
-        <View style={{ alignItems: "center", backgroundColor: "red" }}>
-          <Loginsvg width={100} height={100} />
-        </View>
+    <ScrollView style={{ paddingHorizontal: 25 }}>
+      <View style={{ alignItems: "center", backgroundColor: "red" }}>
+        <Loginsvg width={100} height={100} />
+      </View>
+      <Text
+        style={{
+          fontSize: 28,
+          fontWeight: "500",
+          color: "#333",
+          marginBottom: 30,
+        }}
+      >
+        Login
+      </Text>
+      <InputField
+        label={"Email ID"}
+        icon={
+          <MaterialIcons
+            name="alternate-email"
+            size={19}
+            color="grey"
+            style={{ marginTop: 5, marginRight: 5 }}
+          />
+        }
+        keyboardType="email-address"
+        onChangeText={(text) => setEmail(text)}
+      />
+
+      <InputField
+        label={"Password"}
+        icon={
+          <Ionicons
+            name="lock-closed-outline"
+            size={19}
+            color="grey"
+            style={{ marginTop: 5, marginRight: 5 }}
+          />
+        }
+        inputType="password"
+        onChangeText={(text) => setPassword(text)}
+      />
+      <TouchableOpacity
+        onPress={handleForgotPassword}
+        style={{ alignItems: "flex-end" }}
+      >
         <Text
-          style={{
-            fontSize: 28,
-            fontWeight: "500",
-            color: "#333",
-            marginBottom: 30,
-          }}
+          style={{ color: "#AD40AF", fontWeight: "700", marginBottom: 25 }}
         >
-          Login
+          Forgot password?{" "}
         </Text>
-        <InputField
-          label={"Email ID"}
-          icon={
-            <MaterialIcons
-              name="alternate-email"
-              size={19}
-              color="grey"
-              style={{ marginTop: 5, marginRight: 5 }}
-            />
-          }
-          keyboardType="email-address"
-          onChangeText={(text) => setEmail(text)}
-        />
+      </TouchableOpacity>
 
-        <InputField
-          label={"Password"}
-          icon={
-            <Ionicons
-              name="lock-closed-outline"
-              size={19}
-              color="grey"
-              style={{ marginTop: 5, marginRight: 5 }}
-            />
-          }
-          inputType="password"
-          onChangeText={(text) => setPassword(text)}
-        />
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <CustomButton label={"Login"} onPress={() => Login()} />
+      )}
+
+      <Text style={{ textAlign: "center", color: "#666", marginBottom: 20 }}>
+        Or, login with...
+      </Text>
+
+      <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
         <TouchableOpacity
-          onPress={handleForgotPassword}
-          style={{ alignItems: "flex-end" }}
-        >
-          <Text
-            style={{ color: "#AD40AF", fontWeight: "700", marginBottom: 25 }}
-          >
-            Forgot password?{" "}
-          </Text>
-        </TouchableOpacity>
-
-        {loading ? (
-          <ActivityIndicator size="large" color="#0000ff" />
-        ) : (
-          <CustomButton label={"Login"} onPress={() => Login()} />
-        )}
-
-        <Text style={{ textAlign: "center", color: "#666", marginBottom: 20 }}>
-          Or, login with...
-        </Text>
-
-        <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
-          <TouchableOpacity
-            onPress={handleGoogleSignIn}
-            style={{
-              backgroundColor: "#ddd",
-              borderRadius: 10,
-              paddingHorizontal: 30,
-              paddingVertical: 10,
-            }}
-          >
-            <Googlesvg height={30} width={30} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {}}
-            style={{
-              backgroundColor: "#ddd",
-              borderRadius: 10,
-              paddingHorizontal: 30,
-              paddingVertical: 10,
-            }}
-          >
-            <Facebooksvg height={30} width={30} />
-          </TouchableOpacity>
-        </View>
-
-        <View
+          onPress={handleGoogleSignIn}
           style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            marginBottom: 30,
-            marginTop: 30,
+            backgroundColor: "#ddd",
+            borderRadius: 10,
+            paddingHorizontal: 30,
+            paddingVertical: 10,
           }}
         >
-          <Text style={{ marginRight: 5 }}>Don't have an account?</Text>
-          <TouchableOpacity onPress={() => navigation.navigate("NavSignUp")}>
-            <Text style={{ color: "#AD40AF", fontWeight: "700" }}>SignUp</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
+          <Googlesvg height={30} width={30} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleFacebookLogin}
+          style={{
+            backgroundColor: "#ddd",
+            borderRadius: 10,
+            paddingHorizontal: 30,
+            paddingVertical: 10,
+          }}
+        >
+          <Facebooksvg height={30} width={30} />
+        </TouchableOpacity>
+      </View>
+
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "center",
+          marginBottom: 30,
+          marginTop: 30,
+        }}
+      >
+        <Text style={{ marginRight: 5 }}>Don't have an account?</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("NavSignUp")}>
+          <Text style={{ color: "#AD40AF", fontWeight: "700" }}>SignUp</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  </SafeAreaView>
+);
 };
 
 export default LoginScreen;

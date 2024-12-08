@@ -9,6 +9,11 @@ import Welcome from "./Welcome";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
+import { Settings } from 'react-native-fbsdk-next';
+
+// Initialize SDK before your app renders
+Settings.initializeSDK();
+
 const Stack = createNativeStackNavigator();
 
 const App = () => {

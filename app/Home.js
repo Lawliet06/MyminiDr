@@ -18,7 +18,7 @@ import {
   reauthenticateWithCredential,
   EmailAuthProvider,
 } from "firebase/auth";
-import { collection, getDocs, onSnapshot, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs, onSnapshot, doc, getDoc, setDoc } from "firebase/firestore";
 
 const Home = () => {
   const navigation = useNavigation();
@@ -28,7 +28,7 @@ const Home = () => {
   const [passwordInput, setPasswordInput] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(true); // For global loader
-  const [userName, setUserName] = useState("User");
+  const [userName, setUserName] = useState("");
 
   const handleExit = () => navigation.navigate("Welcome");
 
@@ -113,20 +113,46 @@ const Home = () => {
     }
   };
 
+
   const fetchUserData = async () => {
     try {
-      const userId = FIREBASE_AUTH.currentUser?.uid;
-      if (!userId) return;
+      const currentUser = FIREBASE_AUTH.currentUser;
+      if (!currentUser) return;
 
-      const userDoc = await getDoc(doc(FIREBASE_DB, "users", userId));
+      // First try to get the display name directly from the auth object
+      if (currentUser.displayName) {
+        setUserName(currentUser.displayName);
+        
+        // Update the user document in Firestore with the display name
+        const userRef = doc(FIREBASE_DB, "users", currentUser.uid);
+        await setDoc(userRef, {
+          fullName: currentUser.displayName,
+          email: currentUser.email,
+          provider: currentUser.providerData[0]?.providerId || 'email',
+          lastUpdated: new Date().toISOString()
+        }, { merge: true });
+        
+        return;
+      }
+
+      // If no display name in auth object, try to get from Firestore
+      const userDoc = await getDoc(doc(FIREBASE_DB, "users", currentUser.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
         if (userData.fullName) {
           setUserName(userData.fullName);
+        } else if (userData.displayName) {
+          setUserName(userData.displayName);
+        } else {
+          // If no name found, use email or default
+          setUserName(currentUser.email?.split('@')[0] || "User");
         }
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
+      // Fallback to email or default name
+      const currentUser = FIREBASE_AUTH.currentUser;
+      setUserName(currentUser?.email?.split('@')[0] || "User");
     }
   };
 
@@ -198,7 +224,7 @@ const Home = () => {
 
       {/* Main Content */}
       <ScrollView contentContainerStyle={styles.mainContent}>
-        <Text style={styles.welcomeText}>Welcome, {userName}!</Text>
+        <Text style={styles.welcomeText}>Welcome {userName}!</Text>
         <View style={styles.cardsContainer}>
           {/* Chat Card */}
           <TouchableOpacity
