@@ -13,8 +13,8 @@ const NavChat = () => {
         name="Chat"
         component={ChatScreen}
         options={{
-          headerShown: true,
-          headerTitle: "Chat with Simy",
+          headerShown: false,
+          headerTitle: "Chat with Tico",
           headerStyle: { backgroundColor: "#1E1E1E" },
           headerTitleStyle: { color: "#fff" },
           headerTintColor: "#fff", 

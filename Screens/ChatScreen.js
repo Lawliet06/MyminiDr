@@ -19,6 +19,8 @@ import { FIREBASE_DB } from "../Firebaseconfig";
 import { collection, addDoc, doc, setDoc, getDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
+
+
 const ChatScreen = ({ route, navigation }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -183,7 +185,7 @@ const ChatScreen = ({ route, navigation }) => {
       const genAI = new GoogleGenerativeAI.GoogleGenerativeAI(TEXT_API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-pro" });
       const healthContext =
-        "You are a health assistant chatbot. Provide health tips, diagnosis based on symptoms, psychological advice, and suggest medications where relevant. Analyze images and include their insights.";
+        "Your name is Tico are a health assistant chatbot. Provide health tips, diagnosis based on symptoms, psychological advice, and suggest medications where relevant. Analyze images and include their insights.";
       const prompt = `${healthContext}\nUser input: ${input}\nImage analysis: ${visionResult}`;
       const result = await model.generateContent(prompt);
       const responseText = result.response.text();
