@@ -40,6 +40,7 @@ const Home = () => {
   const [passwordInput, setPasswordInput] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingChats, setIsLoadingChats] = useState(true);
   const [userName, setUserName] = useState("");
 
   const handleExit = () => navigation.navigate("Welcome");
@@ -78,13 +79,15 @@ const Home = () => {
   };
 
   const fetchChatHistory = async () => {
+    setIsLoadingChats(true);
     try {
       const userId = FIREBASE_AUTH.currentUser?.uid;
       if (!userId) {
         console.log("No user logged in");
-        setIsLoading(false);
+        setIsLoadingChats(false);
         return;
       }
+
 
       const chatsRef = collection(FIREBASE_DB, `users/${userId}/chats`);
 
@@ -117,18 +120,18 @@ const Home = () => {
           );
 
           setChatHistory(sortedChats);
-          setIsLoading(false);
+          setIsLoadingChats(false);
         },
         (error) => {
           console.error("Error listening to chat history:", error);
-          setIsLoading(false);
+          setIsLoadingChats(false);
         }
       );
 
       return unsubscribe;
     } catch (error) {
       console.error("Error fetching chat history:", error);
-      setIsLoading(false);
+      setIsLoadingChats(false);
     }
   };
 
@@ -348,32 +351,37 @@ const Home = () => {
 
           {/* History Section */}
           <Text style={styles.sectionTitle}>Recent Chats</Text>
-          <ScrollView style={styles.historyContainer}>
-            {chatHistory.length > 0 ? (
-              chatHistory.map((chat, index) => (
-                <TouchableOpacity
-                  key={chat.id}
-                  style={styles.historyItem}
-                  onPress={() =>
-                    navigation.navigate("ChatScreen", {
-                      screen: "Chat",
-                      params: {
-                        chatData: chat,
-                        chatId: chat.id,
-                      },
-                    })
-                  }
-                >
-                  <Icon name="clock-o" size={18} color="#fff" />
-                  <Text style={styles.historyText}>{chat.title}</Text>
-                </TouchableOpacity>
-              ))
-            ) : (
-              <View style={styles.loaderContainer}>
-                <Text style={styles.loaderText}>No chat history found</Text>
-              </View>
-            )}
-          </ScrollView>
+      <ScrollView style={styles.historyContainer}>
+        {isLoadingChats ? (
+          <View style={styles.loaderContainerChats}>
+            <ActivityIndicator size="small" color="#4CAF50" />
+            <Text style={styles.loaderText}>Loading chats...</Text>
+          </View>
+        ) : chatHistory.length > 0 ? (
+          chatHistory.map((chat, index) => (
+            <TouchableOpacity
+              key={chat.id}
+              style={styles.historyItem}
+              onPress={() =>
+                navigation.navigate("ChatScreen", {
+                  screen: "Chat",
+                  params: {
+                    chatData: chat,
+                    chatId: chat.id,
+                  },
+                })
+              }
+            >
+              <Icon name="clock-o" size={18} color="#fff" />
+              <Text style={styles.historyText}>{chat.title}</Text>
+            </TouchableOpacity>
+          ))
+        ) : (
+          <View style={styles.loaderContainer}>
+            <Text style={styles.loaderText}>No chat history found</Text>
+          </View>
+        )}
+      </ScrollView>
         </ScrollView>
 
         {/* Password Confirmation Modal */}
@@ -508,6 +516,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
     backgroundColor: "#121212",
+  },
+  loaderContainerChats: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+
   },
   loaderText: { color: "#F0F8FF", marginTop: 10 },
 });
