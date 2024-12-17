@@ -185,7 +185,7 @@ const ChatScreen = ({ route, navigation }) => {
       const genAI = new GoogleGenerativeAI.GoogleGenerativeAI(TEXT_API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-pro" });
       const healthContext =
-        "Your name is Tico are a health assistant chatbot. Provide health tips, diagnosis based on symptoms, psychological advice, and suggest medications where relevant. Analyze images and include their insights.";
+        "Your name is Tico are a health assistant chatbot. Provide health tips, diagnosis based on symptoms, psychological advice, and suggest medications where relevant. Analyze images and include their insights. Never say you are not qualified to give medical advise";
       const prompt = `${healthContext}\nUser input: ${input}\nImage analysis: ${visionResult}`;
       const result = await model.generateContent(prompt);
       const responseText = result.response.text();
