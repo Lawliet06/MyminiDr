@@ -207,81 +207,104 @@ const Home = () => {
   return (
     <ImageBackground
       source={background}
-      style={{ flex: 1, justifyContent: "center", alignItems: "center", resizeMode: "cover", }}
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        resizeMode: "cover",
+      }}
     >
       <View style={styles.container}>
-        {/* Sidebar */}
-        {isSidebarVisible && (
-          <View style={styles.sidebar}>
-            <ImageBackground
-              source={require("../assets/images/bg4.jpg")}
-              style={{
-                flex: 1,
-                opacity: 0.9,
-                resizeMode: "cover",
-                
-              }}
-            >
-              <TouchableOpacity onPress={handleExit} style={styles.sidebarItem}>
-                <Icon name="sign-out" size={18} color="#fff" />
-                <Text style={styles.sidebarText}>Exit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleLogout}
-                style={styles.sidebarItem}
+        <Modal
+          isVisible={isSidebarVisible}
+          backdropOpacity={0.5} // Darkens the area outside the sidebar
+          onBackdropPress={() => setSidebarVisible(false)} // Close when backdrop is pressed
+          animationIn="slideInLeft"
+          animationOut="slideOutLeft"
+          style={{ margin: 0, justifyContent: "flex-start" }} // Align sidebar to the left
+        >
+          {/* Sidebar */}
+          {isSidebarVisible && (
+            <View style={styles.sidebar}>
+              <ImageBackground
+                source={require("../assets/images/bg4.jpg")}
+                style={{
+                  flex: 1,
+                  opacity: 0.9,
+                  resizeMode: "cover",
+                  borderRadius: 20,
+                  overflow: "hidden",
+                }}
               >
-                <Icon name="power-off" size={18} color="#fff" />
-                <Text style={styles.sidebarText}>Logout</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleDeleteAccount}
-                style={styles.sidebarItem}
-                disabled={deletingAccount}
-              >
-                <Icon name="trash" size={18} color="#fff" />
-                <Text style={styles.sidebarText}>
-                  {deletingAccount ? "Deleting..." : "Delete Account"}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.closeSidebar}
-                onPress={() => setSidebarVisible(false)}
-              >
-                <Icon name="times" size={30} color="#fff" />
-              </TouchableOpacity>
-            </ImageBackground>
+                <TouchableOpacity
+                  onPress={handleExit}
+                  style={styles.sidebarItem}
+                >
+                  <Icon name="sign-out" size={18} color="#fff" />
+                  <Text style={styles.sidebarText}>Exit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleExit}
+                  style={styles.sidebarItem}
+                >
+                  <Icon name="question-circle" size={18} color="#fff" />
+                  <Text style={styles.sidebarText}>About us</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleExit}
+                  style={styles.sidebarItem}
+                >
+                  <Icon name="lock" size={18} color="#fff" />
+                  <Text style={styles.sidebarText}>Policy & terms</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleLogout}
+                  style={styles.sidebarItem}
+                >
+                  <Icon name="power-off" size={18} color="#fff" />
+                  <Text style={styles.sidebarText}>Logout</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleDeleteAccount}
+                  style={styles.sidebarItem}
+                  disabled={deletingAccount}
+                >
+                  <Icon name="trash" size={20} color="#8B0000" />
+                  <Text style={styles.sidebarText}>
+                    {deletingAccount ? "Deleting..." : "Delete Account"}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.closeSidebar}
+                  onPress={() => setSidebarVisible(false)}
+                >
+                  <Icon name="times" size={30} color="#65000B" />
+                </TouchableOpacity>
+              </ImageBackground>
+            </View>
+          )}
+        </Modal>
+        <View style={{ marginBottom: 100 }}>
+          {/* Hamburger Menu (Cogwheel) */}
+          <TouchableOpacity
+            style={styles.cogwheelMenu}
+            onPress={() => setSidebarVisible(true)}
+          >
+            <Icon
+              name="cog"
+              size={35}
+              color="#F0F8FF"
+              style={styles.cogwheelIcon}
+            />
+          </TouchableOpacity>
+
+          <View style={styles.headerImageContainer}>
+            <Image
+              source={require("../assets/images/hd1.png")}
+              style={styles.headerImage}
+              resizeMode="contain"
+            />
           </View>
-        )}
-
-        {/* Hamburger Menu */}
-        <TouchableOpacity
-          style={styles.hamburgerMenu}
-          onPress={() => setSidebarVisible(true)}
-        >
-          <Icon
-            name="th-large"
-            size={40}
-            color="#F0F8FF"
-            backgroundColor="#000f89"
-            padding={11}
-            style={{ borderRadius: 30 }}
-          />
-        </TouchableOpacity>
-
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            marginTop: 20,
-            left: 140,
-          }}
-        >
-          <Image
-            source={require("../assets/images/hd1.png")}
-            style={{ width: 60 }}
-            resizeMode="contain"
-          />
         </View>
 
         {/* Main Content */}
@@ -354,12 +377,16 @@ const Home = () => {
         </ScrollView>
 
         {/* Password Confirmation Modal */}
-        <Modal isVisible={isPasswordModalVisible} backdropOpacity={0.5}>
+        <Modal
+          isVisible={isPasswordModalVisible}
+          backdropOpacity={0.5}
+          onBackdropPress={() => setPasswordModalVisible(false)}
+        >
           <View style={styles.modal}>
             <Text style={styles.modalTitle}>Confirm Password</Text>
             <TextInput
               secureTextEntry
-              placeholder="Enter Password"
+              placeholder="Enter Password to delete the account"
               value={passwordInput}
               onChangeText={setPasswordInput}
               style={styles.input}
@@ -383,14 +410,41 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     width: "60%",
-    height: "100%",
-    
+    height: "37%",
+    margin: 5,
     zIndex: 10,
   },
+  cogwheelMenu: {
+    position: "absolute",
+    top: 30,
+    left: 20,
+    zIndex: 2,
+    backgroundColor: "#002244",
+    padding: 10,
+    borderRadius: 50,
+  },
+
+  cogwheelIcon: {
+    borderRadius: 50,
+  },
+
+  headerImageContainer: {
+    position: "absolute",
+    top: 30, // Aligns with the cogwheel
+    right: 20, // Adds spacing between the cogwheel and the image
+    zIndex: 1,
+  },
+
+  headerImage: {
+    width: 50,
+    height: 50,
+  },
+
   sidebarItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    margin: 10,
+    marginTop: 18,
   },
   sidebarText: { marginLeft: 10, color: "#F0F8FF", fontSize: 16 },
   closeSidebar: { position: "absolute", top: 20, right: 20 },
@@ -444,9 +498,9 @@ const styles = StyleSheet.create({
   },
   historyText: { color: "#F0F8FF", marginLeft: 10 },
   modal: { backgroundColor: "#F0F8FF", padding: 20, borderRadius: 10 },
-  modalTitle: { fontSize: 18, marginBottom: 10 },
+  modalTitle: { fontSize: 18, marginBottom: 10, color: '#AB0003' },
   input: { borderBottomWidth: 1, marginBottom: 20 },
-  confirmText: { color: "blue", textAlign: "center" },
+  confirmText: { color: "#F0F8FF", textAlign: "center", backgroundColor:'#AB0003', margin:'auto', width:'50%', padding:5, borderRadius:10, alignSelf:'center' },
 
   loaderContainer: {
     flex: 1,
