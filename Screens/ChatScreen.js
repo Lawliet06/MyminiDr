@@ -34,8 +34,8 @@ const ChatScreen = ({ route, navigation }) => {
     route.params?.chatId || route.params?.chatData?.id || route.params?.id;
   const userId = getAuth().currentUser.uid;
 
-  const TEXT_API_KEY = "AIzaSyAQzJer7LGPAp8kkG8JOjrsrfY9PjWd7hc";
-  const VISION_API_KEY = "AIzaSyDnUzQV5SMKTh6CQ2zVTNtj0waBd0dXYPQ";
+  const TEXT_API_KEY = {Add_apikey_here};
+  const VISION_API_KEY = {Add_apikey_here};
   const VISION_API_URL = `https://vision.googleapis.com/v1/images:annotate?key=${VISION_API_KEY}`;
 
   useEffect(() => {
