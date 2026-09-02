@@ -13,7 +13,7 @@ const firebaseConfig = {
   projectId: "my-mini-dr",
   storageBucket: "my-mini-dr.appspot.com",
   messagingSenderId: "320612794855",
-  appId: "1:320612794855:web:41a12febae93e9c2363d42",
+  appId: {Add_appid_here},
   measurementId: "G-LFFPYPP3CB",
 };
 
