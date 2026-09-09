@@ -479,7 +479,7 @@ const Home = () => {
             {/* Chat Card */}
             <TouchableOpacity
               style={styles.card1}
-              onPress={() => navigation.navigate("ChatScreen")}
+              onPress={() => navigation.navigate("NavChat")}
             >
               <Icon
                 name="weixin"
@@ -496,7 +496,7 @@ const Home = () => {
             {/* Talk Card */}
             <TouchableOpacity
               style={styles.card2}
-              onPress={() => navigation.navigate("ChatScreen")}
+              onPress={() => navigation.navigate("NavChat")}
             >
               <Icon
                 name="camera"
@@ -525,7 +525,7 @@ const Home = () => {
                   key={chat.id}
                   style={styles.historyItem}
                   onPress={() =>
-                    navigation.navigate("ChatScreen", {
+                    navigation.navigate("NavChat", {
                       screen: "Chat",
                       params: {
                         chatData: chat,

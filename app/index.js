@@ -36,18 +36,14 @@ const App = () => {
         options={{ headerShown: false, headerTitleAlign: "center" }}
       />
       <Stack.Screen
+        name="NavChat"
+        component={ChatScreen}
+        options={{ headerShown: false, headerTitleAlign: "center" }}
+      />
+      <Stack.Screen
         name="ChatScreen"
         component={ChatScreen}
-        options={({ route }) => ({
-          title:
-            route.params?.params?.chatData?.title ||
-            route.params?.chatData?.title ||
-            "",
-          headerStyle: {
-            backgroundColor: "black", // Change to your desired color
-          },
-          headerTintColor: "#E1EBEE",
-        })}
+        options={{ headerShown: false, headerTitleAlign: "center" }}
       />
       <Stack.Screen
         name="NavLogin"
