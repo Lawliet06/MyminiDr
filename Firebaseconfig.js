@@ -40,4 +40,5 @@ try {
   auth = getAuth(app);
 }
 
-export { app as FIREBASE_APP, firestore as FIREBASE_DB, auth as FIREBASE_AUTH };
+export { app as FIREBASE_APP, firestore as FIREBASE_DB, auth as FIREBASE_AUTH };
+
