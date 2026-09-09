@@ -201,6 +201,8 @@ const SignupScreen = ({ navigation }) => {
     } finally {
       setLoading(false);
     }
+  };
+
   const handleFacebookLogin = async () => {
     try {
       setLoading(true);
