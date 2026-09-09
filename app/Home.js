@@ -553,41 +553,87 @@ const Home = () => {
           onBackdropPress={() => setAboutModalVisible(false)}
           animationIn="fadeIn"
           animationOut="fadeOut"
-          style={{ margin: 16 }}
+          style={{ margin: 16, justifyContent: "center", alignItems: "center" }}
         >
-          <View style={{ backgroundColor: "#0d0d1a", borderRadius: 16, padding: 22 }}>
-            <Text style={{ color: "#F0F8FF", fontSize: 20, fontWeight: "bold", marginBottom: 4 }}>🩺 About MyMiniDr</Text>
-            <Text style={{ color: "#6495ED", fontSize: 13, marginBottom: 14 }}>Your AI-powered personal health companion</Text>
-
-            <Text style={{ color: "#E1EBEE", fontWeight: "bold", marginBottom: 6 }}>Who We Are</Text>
-            <Text style={{ color: "#B0C4DE", marginBottom: 12, lineHeight: 20 }}>
-              MyMiniDr is a personal health assistant application powered by Google's Gemini AI. Our AI companion, Dr. Tico, is designed to help you understand your health better — from managing daily wellness to providing insights on symptoms, mental health, and medications.
-            </Text>
-
-            <Text style={{ color: "#E1EBEE", fontWeight: "bold", marginBottom: 6 }}>What Dr. Tico Can Do</Text>
-            <Text style={{ color: "#B0C4DE", marginBottom: 4 }}>🔹 Provide health tips and personalized wellness advice</Text>
-            <Text style={{ color: "#B0C4DE", marginBottom: 4 }}>🔹 Analyze symptoms and offer possible insights</Text>
-            <Text style={{ color: "#B0C4DE", marginBottom: 4 }}>🔹 Offer mental health guidance and emotional support</Text>
-            <Text style={{ color: "#B0C4DE", marginBottom: 4 }}>🔹 Suggest safe and accurate medication information</Text>
-            <Text style={{ color: "#B0C4DE", marginBottom: 12 }}>🔹 Analyze images you share (e.g. medication, rashes)</Text>
-
-            <Text style={{ color: "#E1EBEE", fontWeight: "bold", marginBottom: 6 }}>Our Commitment</Text>
-            <Text style={{ color: "#B0C4DE", marginBottom: 4 }}>🔒 All your chats are AES-256 encrypted — only you can read them</Text>
-            <Text style={{ color: "#B0C4DE", marginBottom: 4 }}>🕵️ Guest mode available — no sign-up required</Text>
-            <Text style={{ color: "#B0C4DE", marginBottom: 16 }}>🚫 We never sell your personal or health data</Text>
-
-            <Text style={{ color: "#888", fontSize: 12, fontStyle: "italic", marginBottom: 14 }}>
-              ⚠️ Dr. Tico is an AI assistant and is NOT a substitute for professional medical care. Always consult a qualified healthcare professional.
-            </Text>
-
-            <Text style={{ color: "#B0C4DE", fontSize: 12, marginBottom: 14 }}>📧 Contact: support@myminidr.com</Text>
-
-            <TouchableOpacity
-              onPress={() => setAboutModalVisible(false)}
-              style={{ backgroundColor: "#6F00FF", paddingVertical: 10, borderRadius: 20, alignItems: "center" }}
+          <View
+            style={{
+              backgroundColor: "#0d0d1a",
+              borderRadius: 18,
+              padding: 20,
+              width: "100%",
+              maxWidth: 520,
+              maxHeight: "85%",
+              display: "flex",
+              flexDirection: "column",
+              borderWidth: 1,
+              borderColor: "rgba(255, 255, 255, 0.12)",
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 8,
+                borderBottomWidth: 1,
+                borderBottomColor: "rgba(255,255,255,0.1)",
+                paddingBottom: 10,
+              }}
             >
-              <Text style={{ color: "#fff", fontWeight: "bold" }}>Close</Text>
-            </TouchableOpacity>
+              <Text style={{ color: "#F0F8FF", fontSize: 18, fontWeight: "bold" }}>🩺 About MyMiniDr</Text>
+              <TouchableOpacity
+                onPress={() => setAboutModalVisible(false)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Icon name="times" size={20} color="#B0C4DE" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView
+              style={{ flexShrink: 1 }}
+              contentContainerStyle={{ paddingVertical: 6, paddingRight: 4 }}
+              showsVerticalScrollIndicator={true}
+            >
+              <Text style={{ color: "#6495ED", fontSize: 13, marginBottom: 12 }}>Your AI-powered personal health companion</Text>
+
+              <Text style={{ color: "#E1EBEE", fontWeight: "bold", marginBottom: 4, fontSize: 14 }}>Who We Are</Text>
+              <Text style={{ color: "#B0C4DE", marginBottom: 12, lineHeight: 19, fontSize: 13 }}>
+                MyMiniDr is a personal health assistant application powered by Google's Gemini AI. Our AI companion, Dr. Tico, is designed to help you understand your health better — from managing daily wellness to providing insights on symptoms, mental health, and medications.
+              </Text>
+
+              <Text style={{ color: "#E1EBEE", fontWeight: "bold", marginBottom: 4, fontSize: 14 }}>What Dr. Tico Can Do</Text>
+              <Text style={{ color: "#B0C4DE", marginBottom: 4, fontSize: 13 }}>🔹 Provide health tips and personalized wellness advice</Text>
+              <Text style={{ color: "#B0C4DE", marginBottom: 4, fontSize: 13 }}>🔹 Analyze symptoms and offer possible insights</Text>
+              <Text style={{ color: "#B0C4DE", marginBottom: 4, fontSize: 13 }}>🔹 Offer mental health guidance and emotional support</Text>
+              <Text style={{ color: "#B0C4DE", marginBottom: 4, fontSize: 13 }}>🔹 Suggest safe and accurate medication information</Text>
+              <Text style={{ color: "#B0C4DE", marginBottom: 12, fontSize: 13 }}>🔹 Analyze images you share (e.g. medication, rashes)</Text>
+
+              <Text style={{ color: "#E1EBEE", fontWeight: "bold", marginBottom: 4, fontSize: 14 }}>Our Commitment</Text>
+              <Text style={{ color: "#B0C4DE", marginBottom: 4, fontSize: 13 }}>🔒 All your chats are AES-256 encrypted — only you can read them</Text>
+              <Text style={{ color: "#B0C4DE", marginBottom: 4, fontSize: 13 }}>🕵️ Guest mode available — no sign-up required</Text>
+              <Text style={{ color: "#B0C4DE", marginBottom: 12, fontSize: 13 }}>🚫 We never sell your personal or health data</Text>
+
+              <Text style={{ color: "#FF6B6B", fontSize: 12, fontStyle: "italic", marginBottom: 10, lineHeight: 16 }}>
+                ⚠️ Dr. Tico is an AI assistant and is NOT a substitute for professional medical care. Always consult a qualified healthcare professional.
+              </Text>
+
+              <Text style={{ color: "#6495ED", fontSize: 12, marginTop: 4 }}>📧 Contact: support@myminidr.com</Text>
+            </ScrollView>
+
+            <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.1)" }}>
+              <TouchableOpacity
+                onPress={() => setAboutModalVisible(false)}
+                style={{
+                  backgroundColor: "#6F00FF",
+                  paddingVertical: 12,
+                  borderRadius: 22,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 15 }}>Close</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </Modal>
 
@@ -597,55 +643,103 @@ const Home = () => {
           onBackdropPress={() => setPolicyModalVisible(false)}
           animationIn="fadeIn"
           animationOut="fadeOut"
-          style={{ margin: 16 }}
+          style={{ margin: 16, justifyContent: "center", alignItems: "center" }}
         >
-          <View style={{ backgroundColor: "#0d0d1a", borderRadius: 16, padding: 22, maxHeight: "85%" }}>
-            <Text style={{ color: "#F0F8FF", fontSize: 20, fontWeight: "bold", marginBottom: 4 }}>🔒 Privacy Policy & Terms</Text>
-            <Text style={{ color: "#6495ED", fontSize: 12, marginBottom: 14 }}>Last Updated: September 9, 2026</Text>
-
-            <Text style={{ color: "#E1EBEE", fontWeight: "bold", marginBottom: 6 }}>Privacy Policy</Text>
-            <Text style={{ color: "#B0C4DE", marginBottom: 4, lineHeight: 18 }}>• Google Sign-In: we collect your name, email, and profile picture via Firebase Auth.</Text>
-            <Text style={{ color: "#B0C4DE", marginBottom: 4, lineHeight: 18 }}>• Guest Mode: fully anonymous — no personal info required.</Text>
-            <Text style={{ color: "#B0C4DE", marginBottom: 4, lineHeight: 18 }}>• Chat messages: encrypted with AES-256 before being saved to Firebase. We cannot read your conversations.</Text>
-            <Text style={{ color: "#B0C4DE", marginBottom: 4, lineHeight: 18 }}>• Images (optional): processed by Gemini AI in memory — never stored.</Text>
-            <Text style={{ color: "#B0C4DE", marginBottom: 4, lineHeight: 18 }}>• We do NOT sell, rent, or share your health data with third parties.</Text>
-            <Text style={{ color: "#B0C4DE", marginBottom: 14, lineHeight: 18 }}>• Third-party services: Firebase (Google), Google Gemini AI — each governed by their own policies.</Text>
-
-            <Text style={{ color: "#E1EBEE", fontWeight: "bold", marginBottom: 6 }}>Terms of Service</Text>
-            <Text style={{ color: "#B0C4DE", marginBottom: 4, lineHeight: 18 }}>⚠️ MyMiniDr is NOT a medical device. Dr. Tico cannot diagnose, prescribe, or treat any condition. Always consult a licensed healthcare professional. In emergencies, call your local emergency services immediately.</Text>
-            <Text style={{ color: "#B0C4DE", marginBottom: 4, lineHeight: 18 }}>• You must be at least 13 years old to use this app.</Text>
-            <Text style={{ color: "#B0C4DE", marginBottom: 4, lineHeight: 18 }}>• Personal, non-commercial use only. No reverse-engineering or misuse.</Text>
-            <Text style={{ color: "#B0C4DE", marginBottom: 4, lineHeight: 18 }}>• AI responses may not always be accurate — verify important health info with a professional.</Text>
-            <Text style={{ color: "#B0C4DE", marginBottom: 14, lineHeight: 18 }}>• The app is provided "as is". We are not liable for health decisions based on AI responses.</Text>
-
-            <Text style={{ color: "#888", fontSize: 12, marginBottom: 14 }}>📧 support@myminidr.com</Text>
-
-            <TouchableOpacity
-              onPress={() => setPolicyModalVisible(false)}
-              style={{ backgroundColor: "#6F00FF", paddingVertical: 10, borderRadius: 20, alignItems: "center" }}
+          <View
+            style={{
+              backgroundColor: "#0d0d1a",
+              borderRadius: 18,
+              padding: 20,
+              width: "100%",
+              maxWidth: 520,
+              maxHeight: "85%",
+              display: "flex",
+              flexDirection: "column",
+              borderWidth: 1,
+              borderColor: "rgba(255, 255, 255, 0.12)",
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 8,
+                borderBottomWidth: 1,
+                borderBottomColor: "rgba(255,255,255,0.1)",
+                paddingBottom: 10,
+              }}
             >
-              <Text style={{ color: "#fff", fontWeight: "bold" }}>Close</Text>
-            </TouchableOpacity>
+              <Text style={{ color: "#F0F8FF", fontSize: 18, fontWeight: "bold" }}>🔒 Privacy Policy & Terms</Text>
+              <TouchableOpacity
+                onPress={() => setPolicyModalVisible(false)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Icon name="times" size={20} color="#B0C4DE" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView
+              style={{ flexShrink: 1 }}
+              contentContainerStyle={{ paddingVertical: 6, paddingRight: 4 }}
+              showsVerticalScrollIndicator={true}
+            >
+              <Text style={{ color: "#6495ED", fontSize: 12, marginBottom: 10 }}>Last Updated: September 9, 2026</Text>
+
+              <Text style={{ color: "#E1EBEE", fontWeight: "bold", marginBottom: 4, fontSize: 14 }}>Privacy Policy</Text>
+              <Text style={{ color: "#B0C4DE", marginBottom: 4, lineHeight: 18, fontSize: 13 }}>• Google Sign-In: we collect your name, email, and profile picture via Firebase Auth.</Text>
+              <Text style={{ color: "#B0C4DE", marginBottom: 4, lineHeight: 18, fontSize: 13 }}>• Guest Mode: fully anonymous — no personal info required.</Text>
+              <Text style={{ color: "#B0C4DE", marginBottom: 4, lineHeight: 18, fontSize: 13 }}>• Chat messages: encrypted with AES-256 before being saved to Firebase. We cannot read your conversations.</Text>
+              <Text style={{ color: "#B0C4DE", marginBottom: 4, lineHeight: 18, fontSize: 13 }}>• Images (optional): processed by Gemini AI in memory — never stored.</Text>
+              <Text style={{ color: "#B0C4DE", marginBottom: 4, lineHeight: 18, fontSize: 13 }}>• We do NOT sell, rent, or share your health data with third parties.</Text>
+              <Text style={{ color: "#B0C4DE", marginBottom: 12, lineHeight: 18, fontSize: 13 }}>• Third-party services: Firebase (Google), Google Gemini AI — each governed by their own policies.</Text>
+
+              <Text style={{ color: "#E1EBEE", fontWeight: "bold", marginBottom: 4, fontSize: 14 }}>Terms of Service</Text>
+              <Text style={{ color: "#FF6B6B", marginBottom: 4, lineHeight: 18, fontSize: 13 }}>⚠️ MyMiniDr is NOT a medical device. Dr. Tico cannot diagnose, prescribe, or treat any condition. Always consult a licensed healthcare professional. In emergencies, call your local emergency services immediately.</Text>
+              <Text style={{ color: "#B0C4DE", marginBottom: 4, lineHeight: 18, fontSize: 13 }}>• You must be at least 13 years old to use this app.</Text>
+              <Text style={{ color: "#B0C4DE", marginBottom: 4, lineHeight: 18, fontSize: 13 }}>• Personal, non-commercial use only. No reverse-engineering or misuse.</Text>
+              <Text style={{ color: "#B0C4DE", marginBottom: 4, lineHeight: 18, fontSize: 13 }}>• AI responses may not always be accurate — verify important health info with a professional.</Text>
+              <Text style={{ color: "#B0C4DE", marginBottom: 10, lineHeight: 18, fontSize: 13 }}>• The app is provided "as is". We are not liable for health decisions based on AI responses.</Text>
+
+              <Text style={{ color: "#6495ED", fontSize: 12, marginTop: 4 }}>📧 support@myminidr.com</Text>
+            </ScrollView>
+
+            <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.1)" }}>
+              <TouchableOpacity
+                onPress={() => setPolicyModalVisible(false)}
+                style={{
+                  backgroundColor: "#6F00FF",
+                  paddingVertical: 12,
+                  borderRadius: 22,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 15 }}>Close</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </Modal>
 
         {/* Password Confirmation Modal */}
         <Modal
           isVisible={isPasswordModalVisible}
-          backdropOpacity={0.5}
+          backdropOpacity={0.6}
           onBackdropPress={() => setPasswordModalVisible(false)}
+          style={{ margin: 16, justifyContent: "center", alignItems: "center" }}
         >
-          <View style={styles.modal}>
+          <View style={[styles.modal, { width: "100%", maxWidth: 400 }]}>
             <Text style={styles.modalTitle}>Confirm Password</Text>
+            <Text style={{ color: "#666", fontSize: 13, marginBottom: 12 }}>Please enter your password to confirm account deletion.</Text>
             <TextInput
               secureTextEntry
-              placeholder="Enter Password to delete the account"
+              placeholder="Enter your password"
               value={passwordInput}
               onChangeText={setPasswordInput}
               style={styles.input}
             />
-            <TouchableOpacity onPress={handlePasswordConfirmation}>
-              <Text style={styles.confirmText}>Confirm</Text>
+            <TouchableOpacity onPress={handlePasswordConfirmation} style={{ width: "100%" }}>
+              <Text style={styles.confirmText}>Confirm Deletion</Text>
             </TouchableOpacity>
           </View>
         </Modal>
@@ -657,8 +751,10 @@ const Home = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // Removed width and maxWidth constraints for full-screen background
-    // alignSelf: "center",
+    width: "100%",
+    maxWidth: 720,
+    alignSelf: "center",
+    position: "relative",
   },
   hamburgerMenu: { position: "absolute", top: 30, left: 20, zIndex: 2 },
   hamburgerIcon: { fontSize: 30, color: "#fff" },
@@ -706,7 +802,7 @@ const styles = StyleSheet.create({
   },
   sidebarText: { marginLeft: 10, color: "#F0F8FF", fontSize: 16 },
   closeSidebar: { position: "absolute", top: 20, right: 20 },
-  mainContent: { alignItems: "center", padding: 20, marginTop: 20 },
+  mainContent: { alignItems: "center", padding: 20, marginTop: 20, width: "100%" },
   welcomeText: { fontSize: 18, color: "#F0F8FF", marginBottom: 20 },
   cardsContainer: {
     flexDirection: "row",
@@ -749,17 +845,17 @@ const styles = StyleSheet.create({
   historyItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 10,
+    marginVertical: 8,
     padding: 15,
     backgroundColor: "#2E2787",
-    borderRadius: 20,
-    opacity: 0.8,
+    borderRadius: 18,
+    opacity: 0.85,
   },
-  historyText: { color: "#F0F8FF", marginLeft: 10 },
-  modal: { backgroundColor: "#F0F8FF", padding: 20, borderRadius: 10 },
-  modalTitle: { fontSize: 18, marginBottom: 10, color: '#AB0003' },
-  input: { borderBottomWidth: 1, marginBottom: 20 },
-  confirmText: { color: "#F0F8FF", textAlign: "center", backgroundColor:'#AB0003', margin:'auto', width:'50%', padding:5, borderRadius:10, alignSelf:'center' },
+  historyText: { color: "#F0F8FF", marginLeft: 10, flex: 1, fontSize: 14 },
+  modal: { backgroundColor: "#F0F8FF", padding: 20, borderRadius: 16 },
+  modalTitle: { fontSize: 18, marginBottom: 10, color: '#AB0003', fontWeight: 'bold' },
+  input: { borderBottomWidth: 1, borderBottomColor: '#ccc', marginBottom: 20, paddingVertical: 6 },
+  confirmText: { color: "#F0F8FF", textAlign: "center", backgroundColor:'#AB0003', width:'100%', padding:12, borderRadius:12, fontWeight: 'bold', alignSelf:'center' },
 
   loaderContainer: {
     flex: 1,

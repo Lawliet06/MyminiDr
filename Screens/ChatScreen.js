@@ -478,7 +478,9 @@ const ChatScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // width and maxWidth removed for full-screen background
+    width: "100%",
+    maxWidth: 720,
+    alignSelf: "center",
   },
   header: {
     flexDirection: "row",
@@ -524,7 +526,6 @@ const styles = StyleSheet.create({
     borderTopColor: "#333",
     backgroundColor: "black",
     width: "100%",
-    maxWidth: 600,
     alignSelf: "center",
   },
   iconButton: { marginHorizontal: 10 },
