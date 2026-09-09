@@ -2,13 +2,15 @@
 
 import React from 'react';
 import { Button, Alert } from 'react-native';
-import auth from '@react-native-firebase/auth';
+import { signOut } from 'firebase/auth';
+import { FIREBASE_AUTH } from '../Firebaseconfig';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SignOutButton = () => {
   const handleSignOut = async () => {
     try {
-      await auth().signOut();
-      // Optionally, you can navigate to a different screen or perform other actions after successful sign-out
+      await signOut(FIREBASE_AUTH);
+      await AsyncStorage.removeItem('userToken');
       console.log('User signed out');
     } catch (error) {
       Alert.alert('Sign Out Error', error.message);

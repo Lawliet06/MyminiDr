@@ -42,7 +42,7 @@ export default function InputField({
             <Ionicons
               name={isPasswordVisible ? "eye" : "eye-off"}
               size={19}
-              color="#AD40AF"
+              color="#6F00FF"
               style={{ marginTop: 5, marginLeft: 5 }}
             />
           </TouchableOpacity>
