@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator, Platform, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -15,11 +15,41 @@ import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
   signInAnonymously,
+  GoogleAuthProvider,
+  FacebookAuthProvider,
+  signInWithCredential,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
 } from "firebase/auth";
 
 import { setDoc, doc } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { encryptData } from "../services/encryption";
+
+let GoogleSignin = null;
+let statusCodes = null;
+let LoginManager = null;
+let AccessToken = null;
+let Settings = null;
+
+if (Platform.OS !== "web") {
+  try {
+    const googleModule = require("@react-native-google-signin/google-signin");
+    GoogleSignin = googleModule.GoogleSignin;
+    statusCodes = googleModule.statusCodes;
+  } catch (e) {
+    console.log("Native Google Signin not available:", e?.message);
+  }
+  try {
+    const fbModule = require("react-native-fbsdk-next");
+    LoginManager = fbModule.LoginManager;
+    AccessToken = fbModule.AccessToken;
+    Settings = fbModule.Settings;
+  } catch (e) {
+    console.log("Native Facebook SDK not available:", e?.message);
+  }
+}
 
 const firestore = FIREBASE_DB;
 
@@ -31,6 +61,22 @@ const SignupScreen = ({ navigation }) => {
       console.error("Error saving login state:", error);
     }
   };
+
+  useEffect(() => {
+    if (Platform.OS === "web") {
+      getRedirectResult(FIREBASE_AUTH)
+        .then(async (result) => {
+          if (result && result.user) {
+            console.log("Redirect login success:", result.user);
+            await saveLoginState();
+            navigation.navigate("Home");
+          }
+        })
+        .catch((err) => {
+          console.error("Redirect auth error:", err);
+        });
+    }
+  }, []);
 
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
@@ -155,6 +201,150 @@ const SignupScreen = ({ navigation }) => {
     } finally {
       setLoading(false);
     }
+  const handleFacebookLogin = async () => {
+    try {
+      setLoading(true);
+
+      if (Platform.OS === "web") {
+        const provider = new FacebookAuthProvider();
+        try {
+          const response = await signInWithPopup(auth, provider);
+          console.log("Facebook Web Sign-In Success:", response.user);
+          await saveLoginState();
+          navigation.navigate("Home");
+          return;
+        } catch (popupErr) {
+          if (
+            popupErr.code === "auth/popup-blocked" ||
+            popupErr.code === "auth/cancelled-popup-request"
+          ) {
+            console.log("Popup blocked, redirecting...");
+            await signInWithRedirect(auth, provider);
+            return;
+          }
+          throw popupErr;
+        }
+      }
+
+      if (!LoginManager) {
+        alert(
+          "Facebook Sign-In requires a standalone Android APK build (EAS build). In Expo Go, please sign in with Email & Password or tap 'Continue as Guest'."
+        );
+        return;
+      }
+
+      await Settings?.initializeSDK?.();
+
+      const result = await LoginManager.logInWithPermissions([
+        "public_profile",
+        "email",
+      ]);
+
+      if (result.isCancelled) {
+        console.log("User cancelled Facebook login");
+        return;
+      }
+
+      const data = await AccessToken.getCurrentAccessToken();
+      if (!data) {
+        throw new Error("Something went wrong obtaining access token");
+      }
+
+      const facebookCredential = FacebookAuthProvider.credential(
+        data.accessToken
+      );
+      await signInWithCredential(auth, facebookCredential);
+      await saveLoginState();
+      navigation.navigate("Home");
+    } catch (error) {
+      console.error("Facebook Sign-In Error:", error);
+      if (error.code === "auth/popup-closed-by-user") {
+        console.log("Facebook popup closed by user");
+      } else if (error.message === "User cancelled the login process") {
+        console.log("User cancelled Facebook login");
+      } else {
+        alert("Facebook sign-in: " + (error.message || "Failed. Please try again."));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setLoading(true);
+
+      if (Platform.OS === "web") {
+        const provider = new GoogleAuthProvider();
+        try {
+          const response = await signInWithPopup(auth, provider);
+          console.log("Google Web Sign-In Success:", response.user);
+          await saveLoginState();
+          navigation.navigate("Home");
+          return;
+        } catch (popupErr) {
+          if (
+            popupErr.code === "auth/popup-blocked" ||
+            popupErr.code === "auth/cancelled-popup-request"
+          ) {
+            console.log("Popup blocked, redirecting...");
+            await signInWithRedirect(auth, provider);
+            return;
+          }
+          throw popupErr;
+        }
+      }
+
+      if (!GoogleSignin) {
+        alert(
+          "Google Sign-In on mobile requires a standalone Android APK build (EAS build). In Expo Go, please sign in with Email & Password or tap 'Continue as Guest'."
+        );
+        return;
+      }
+
+      await GoogleSignin.configure({
+        webClientId:
+          "320612794855-59ghqt5fllv319mdifppf7is6poippp6.apps.googleusercontent.com",
+        offlineAccess: true,
+        scopes: ["profile", "email"],
+        forceCodeForRefreshToken: true,
+      });
+
+      await GoogleSignin.signOut();
+      await GoogleSignin.hasPlayServices({
+        showIfNotAvailable: true,
+        showPlayServicesUpdateDialog: true,
+      });
+
+      const signInResult = await GoogleSignin.signIn({
+        prompt: "select_account",
+      });
+
+      if (!signInResult || !signInResult.data || !signInResult.data.idToken) {
+        console.log("Sign-in process was cancelled or failed");
+        return;
+      }
+
+      const { data } = signInResult;
+      const credential = GoogleAuthProvider.credential(
+        data.idToken,
+        data.accessToken
+      );
+      await signInWithCredential(auth, credential);
+      await saveLoginState();
+      navigation.navigate("Home");
+    } catch (error) {
+      if (error.code === "auth/popup-closed-by-user") {
+        console.log("Google popup closed by user");
+      } else if (statusCodes && error.code === statusCodes.SIGN_IN_CANCELLED) {
+        console.log("Sign-in was cancelled by user");
+      } else {
+        console.error("Google Sign-In Error:", error);
+        alert("Google sign-in: " + (error.message || "Failed. Please try again."));
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -177,8 +367,6 @@ const SignupScreen = ({ navigation }) => {
         }}
         showsVerticalScrollIndicator={false}
       >
-
-
         <Text
           style={{
             fontSize: 28,
@@ -193,7 +381,7 @@ const SignupScreen = ({ navigation }) => {
 
         <View style={{ flexDirection: "row", justifyContent: "space-evenly", marginBottom: 10 }}>
           <TouchableOpacity
-            onPress={() => {}}
+            onPress={handleGoogleSignIn}
             style={{
               backgroundColor: "#ddd",
               borderRadius: 10,
@@ -204,7 +392,7 @@ const SignupScreen = ({ navigation }) => {
             <Googlesvg height={30} width={30} />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => {}}
+            onPress={handleFacebookLogin}
             style={{
               backgroundColor: "#ddd",
               borderRadius: 10,

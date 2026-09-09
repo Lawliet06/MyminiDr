@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -26,6 +26,8 @@ import {
   FacebookAuthProvider,
   signInWithCredential,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInAnonymously,
 } from "firebase/auth";
 
@@ -59,6 +61,22 @@ const LoginScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
 
   const auth = FIREBASE_AUTH;
+
+  useEffect(() => {
+    if (Platform.OS === "web") {
+      getRedirectResult(auth)
+        .then(async (result) => {
+          if (result && result.user) {
+            console.log("Redirect login success:", result.user);
+            await saveLoginState();
+            navigation.navigate("Home");
+          }
+        })
+        .catch((err) => {
+          console.error("Redirect auth error:", err);
+        });
+    }
+  }, []);
 
   const isValidEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -165,15 +183,30 @@ const LoginScreen = ({ navigation }) => {
 
       if (Platform.OS === "web") {
         const provider = new FacebookAuthProvider();
-        const response = await signInWithPopup(auth, provider);
-        console.log("Facebook Web Sign-In Success:", response.user);
-        await saveLoginState();
-        navigation.navigate("Home");
-        return;
+        try {
+          const response = await signInWithPopup(auth, provider);
+          console.log("Facebook Web Sign-In Success:", response.user);
+          await saveLoginState();
+          navigation.navigate("Home");
+          return;
+        } catch (popupErr) {
+          if (
+            popupErr.code === "auth/popup-blocked" ||
+            popupErr.code === "auth/cancelled-popup-request"
+          ) {
+            console.log("Popup blocked, redirecting...");
+            await signInWithRedirect(auth, provider);
+            return;
+          }
+          throw popupErr;
+        }
       }
 
       if (!LoginManager) {
-        throw new Error("Facebook LoginManager not initialized");
+        alert(
+          "Facebook Sign-In requires a standalone Android APK build (EAS build). In Expo Go, please sign in with Email & Password or tap 'Continue as Guest'."
+        );
+        return;
       }
 
       // Initialize Facebook SDK if needed
@@ -229,15 +262,30 @@ const LoginScreen = ({ navigation }) => {
 
       if (Platform.OS === "web") {
         const provider = new GoogleAuthProvider();
-        const response = await signInWithPopup(auth, provider);
-        console.log("Google Web Sign-In Success:", response.user);
-        await saveLoginState();
-        navigation.navigate("Home");
-        return;
+        try {
+          const response = await signInWithPopup(auth, provider);
+          console.log("Google Web Sign-In Success:", response.user);
+          await saveLoginState();
+          navigation.navigate("Home");
+          return;
+        } catch (popupErr) {
+          if (
+            popupErr.code === "auth/popup-blocked" ||
+            popupErr.code === "auth/cancelled-popup-request"
+          ) {
+            console.log("Popup blocked, redirecting...");
+            await signInWithRedirect(auth, provider);
+            return;
+          }
+          throw popupErr;
+        }
       }
 
       if (!GoogleSignin) {
-        throw new Error("Google Sign-In is not configured for this device");
+        alert(
+          "Google Sign-In on mobile requires a standalone Android APK build (EAS build). In Expo Go, please sign in with Email & Password or tap 'Continue as Guest'."
+        );
+        return;
       }
 
       await GoogleSignin.configure({
