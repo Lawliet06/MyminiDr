@@ -4,7 +4,7 @@
 [![Expo](https://img.shields.io/badge/Expo-v50-000020?style=flat-square&logo=expo&logoColor=white)](https://expo.dev/)
 [![Gemini AI](https://img.shields.io/badge/Google%20Gemini-3.x%20Flash-4285F4?style=flat-square&logo=google&logoColor=white)](https://ai.google.dev/)
 [![Firebase](https://img.shields.io/badge/Firebase-v10-FFCA28?style=flat-square&logo=firebase&logoColor=black)](https://firebase.google.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 
 **MyMiniDr** is a cross-platform (Web, Android, iOS) AI-powered personal health companion built with **React Native** and **Expo**. It empowers users to ask medical questions, analyze symptom descriptions, inspect prescription/lab photos via OCR & multimodal vision, and maintain private, encrypted medical chat histories.
 
