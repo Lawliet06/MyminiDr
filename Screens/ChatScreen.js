@@ -12,8 +12,7 @@ import {
   ImageBackground,
   Platform,
 } from "react-native";
-import Icon from "react-native-vector-icons/MaterialIcons";
-import FontAwesome from "react-native-vector-icons/FontAwesome";
+import { MaterialIcons as Icon, FontAwesome } from "@expo/vector-icons";
 import * as GoogleGenerativeAI from "@google/generative-ai";
 import { FIREBASE_DB } from "../Firebaseconfig";
 import { collection, addDoc, doc, setDoc } from "firebase/firestore";

@@ -13,8 +13,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Modal from "react-native-modal";
-import Icon from "react-native-vector-icons/FontAwesome";
-import { MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome as Icon, MaterialIcons } from "@expo/vector-icons";
 import { FIREBASE_AUTH, FIREBASE_DB } from "../Firebaseconfig";
 import {
   deleteUser,
@@ -304,23 +303,23 @@ const Home = () => {
   return (
     <ImageBackground
       source={background}
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          resizeMode: "cover",
-          width: "100%",
-          height: "100%",
-        }}
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        resizeMode: "cover",
+        width: "100%",
+        height: "100%",
+      }}
     >
       <View style={styles.container}>
         <Modal
           isVisible={isSidebarVisible}
           backdropOpacity={0.5}
-          onBackdropPress={() => setSidebarVisible(false)} 
+          onBackdropPress={() => setSidebarVisible(false)}
           animationIn="slideInLeft"
           animationOut="slideOutLeft"
-          style={{ margin: 0, justifyContent: "flex-start" }} 
+          style={{ margin: 0, justifyContent: "flex-start" }}
         >
           {/* Sidebar */}
           {isSidebarVisible && (
@@ -399,8 +398,8 @@ const Home = () => {
                     {deletingAccount
                       ? "Deleting..."
                       : isGuest
-                      ? "Clear Guest Session"
-                      : "Delete Account"}
+                        ? "Clear Guest Session"
+                        : "Delete Account"}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -514,37 +513,37 @@ const Home = () => {
 
           {/* History Section */}
           <Text style={styles.sectionTitle}>Recent Chats</Text>
-      <ScrollView style={styles.historyContainer}>
-        {isLoadingChats ? (
-          <View style={styles.loaderContainerChats}>
-            <ActivityIndicator size="small" color="#4CAF50" />
-            <Text style={styles.loaderText}>Loading chats...</Text>
-          </View>
-        ) : chatHistory.length > 0 ? (
-          chatHistory.map((chat, index) => (
-            <TouchableOpacity
-              key={chat.id}
-              style={styles.historyItem}
-              onPress={() =>
-                navigation.navigate("ChatScreen", {
-                  screen: "Chat",
-                  params: {
-                    chatData: chat,
-                    chatId: chat.id,
-                  },
-                })
-              }
-            >
-              <Icon name="clock-o" size={18} color="#fff" />
-              <Text style={styles.historyText}>{chat.title}</Text>
-            </TouchableOpacity>
-          ))
-        ) : (
-          <View style={styles.loaderContainer}>
-            <Text style={styles.loaderText}>No chat history found</Text>
-          </View>
-        )}
-      </ScrollView>
+          <ScrollView style={styles.historyContainer}>
+            {isLoadingChats ? (
+              <View style={styles.loaderContainerChats}>
+                <ActivityIndicator size="small" color="#4CAF50" />
+                <Text style={styles.loaderText}>Loading chats...</Text>
+              </View>
+            ) : chatHistory.length > 0 ? (
+              chatHistory.map((chat, index) => (
+                <TouchableOpacity
+                  key={chat.id}
+                  style={styles.historyItem}
+                  onPress={() =>
+                    navigation.navigate("ChatScreen", {
+                      screen: "Chat",
+                      params: {
+                        chatData: chat,
+                        chatId: chat.id,
+                      },
+                    })
+                  }
+                >
+                  <Icon name="clock-o" size={18} color="#fff" />
+                  <Text style={styles.historyText}>{chat.title}</Text>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <View style={styles.loaderContainer}>
+                <Text style={styles.loaderText}>No chat history found</Text>
+              </View>
+            )}
+          </ScrollView>
         </ScrollView>
 
         {/* About Us Modal */}
@@ -774,7 +773,7 @@ const styles = StyleSheet.create({
     left: 20,
     zIndex: 2,
     backgroundColor: "#002244",
-    padding: 10,
+    padding: 8,
     borderRadius: 50,
   },
 
@@ -855,7 +854,7 @@ const styles = StyleSheet.create({
   modal: { backgroundColor: "#F0F8FF", padding: 20, borderRadius: 16 },
   modalTitle: { fontSize: 18, marginBottom: 10, color: '#AB0003', fontWeight: 'bold' },
   input: { borderBottomWidth: 1, borderBottomColor: '#ccc', marginBottom: 20, paddingVertical: 6 },
-  confirmText: { color: "#F0F8FF", textAlign: "center", backgroundColor:'#AB0003', width:'100%', padding:12, borderRadius:12, fontWeight: 'bold', alignSelf:'center' },
+  confirmText: { color: "#F0F8FF", textAlign: "center", backgroundColor: '#AB0003', width: '100%', padding: 12, borderRadius: 12, fontWeight: 'bold', alignSelf: 'center' },
 
   loaderContainer: {
     flex: 1,

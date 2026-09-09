@@ -1,5 +1,4 @@
-import { MaterialIcons } from "@expo/vector-icons";
-import Icon from "react-native-vector-icons/FontAwesome";
+import { MaterialIcons, FontAwesome as Icon } from "@expo/vector-icons";
 import {
   View,
   Text,
